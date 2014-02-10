@@ -19,32 +19,62 @@ write commands from an external interface. These commands are sent to
 the core being tested and the response is then returned to the host
 using the same extarnal interface.
 
+## Protocol ##
+Coretest uses a simple command-response protocol to allow a host to
+control the test functionality.
+
+The commands are sent as a sequence of bytes with a command byte
+followed by zero or more arguments. The response consists of a response
+code byte followed by zero or more data fields.
+
+The start of a command is signalled by a Start of Command (SOC)
+byte. The end of a command is signalled by a End of Command (EOC)
+byte. These bytes are:
+  - SOC: 0x55
+  - EOC: 0xaa
+
+The start of a response is signalled by a Start of Response (SOR)
+byte. The end of a response is signalled by a End of Respons (EOC)
+byte. These bytes are:
+ - SOR: 0xaa
+ - EOR: 0x55
+
 The commands accepted are:
-  - RESET the core being tested. In total 1 byte.
+  - RESET the core being tested. In total 3 byte with SOC and EOC.
     - 0x01 opcode
-    
-  - READ a 32-bit data word from a given address. In total 5 bytes.
-    - 0x02 opcode
+
+
+  - READ a 32-bit data word from a given address. In total 7 bytes with
+    SOC and EOC.
+    - 0x10 opcode
     - 32-bit address in MSB format
 
 
-  - WRITE a given 32-bit data word to a given address. In total 9 bytes. 
-    - 0x03 opcode
-    - 32-bit address in MSB format.
+  - WRITE a given data word to a given address. In total 8 bytes
+    with SOC and EOC. 
+    - 0x11 opcode
+    - 16-bit address in MSB format.
     - 32-bit data in MSB format.
 
 
 The possible responses are:
-  - OK. Sent after successful write and reset. In total 1 byte.
+  - OK. Sent after successful write and reset. In total 3 bytes with SOR
+    and EOR.
     - 0xff response code.
 
-  - ERROR. Sent after unsuccessful read or write operations. In total 1
-    byte.
+
+  - UNKNOWN. Unknown command received, In tota 3 bytes with SOR and EOR.
     - 0xfe response code.
-    
+
+
+  - CMD_ERROR. Unsuccessful command such as write to read only register. In total 3
+    bytes with SOR and EOR.
+    - 0xfd response code.
+
+
   - DATA and 32-bit data. Sent after successful read operation. In total
-    5 bytes.
-    - 0xfd response code
+    7 bytes with SOR and EOR.
+    - 0x7f response code
     - 32-bit data in MSB format.
     
 
@@ -53,4 +83,6 @@ The possible responses are:
 
 Initial version of the project. Based on previous cttest project but
 renamed and with new (ideas) about the test architecture.
+
+Speciefied command and response protocol.
 
