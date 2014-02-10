@@ -58,17 +58,27 @@ module coretest(
                 output wire [15 : 0] core_address,
                 output wire [31 : 0] core_write_data,
                 input wire  [31 : 0] core_read_data,
-                input wire [31 : 0]  core_error
+                input wire           core_error
                );
 
   
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  // Command constants
+  // Command constants.
+  parameter SOC = 8'h55;
+  parameter EOC = 8'haa;
 
-  // Response constants
+  parameter RST_CMD = 8'h01; 
+  parameter RD_CMD  = 8'h10; 
+  parameter WR_CMD  = 8'h20; 
 
+  
+  // Response constants.
+  parameter SOR = 8'haa;
+  parameter EOR = 8'h55;
+
+  
   // FSM states.
   parameter CTRL_IDLE      = 8'h00;
 
@@ -93,27 +103,64 @@ module coretest(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
+  reg          rx_syn_reg;
+  reg          rx_syn_new;
+  reg          rx_syn_we;
+
+  reg          rx_ack_reg;
+  reg          rx_ack_new;
+  reg          rx_ack_we;
+
+  reg [7 : 0]  rx_data_reg;
+  reg [7 : 0]  rx_data_new;
+  reg          rx_data_we;
+
+  
+  reg          tx_syn_reg;
+  reg          tx_syn_new;
+  reg          tx_syn_we;
+
+  reg          tx_ack_reg;
+  reg          tx_ack_new;
+  reg          tx_ack_we;
+
+  reg [7 : 0]  tx_data_reg;
+  reg [7 : 0]  tx_data_new;
+  reg          tx_data_we;
+  
+  
+  reg          core_reset_n_reg;
+  reg          core_cs_reg;
+  reg          core_we_reg;
+  reg [15 : 0] core_address_reg;
+  reg [31 : 0] core_write_data_reg;
+  reg [31 : 0] core_read_data_reg;
+  reg          core_error_reg;
+  
   reg [7 : 0] coretest_ctrl_reg;
   reg [7 : 0] coretest_ctrl_new;
   reg         coretest_ctrl_we;
-  
+
   
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
   
-
-  
-  //----------------------------------------------------------------
-  // Module instantiantions.
-  //----------------------------------------------------------------
-
-
   
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
+  assign rx_ack = rx_ack_reg;
 
+  assign tx_syn  = tx_syn_reg;
+  assign tx_data = tx_data_reg;
+
+  assign core_reset_n    = core_reset_n_reg;
+  assign core_cs         = core_cs_reg;
+  assign core_we         = core_we_reg;
+  assign core_address    = core_address_reg;
+  assign core_write_data = core_write_data_reg;
+  
   
   //----------------------------------------------------------------
   // reg_update
