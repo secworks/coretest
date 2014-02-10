@@ -65,12 +65,38 @@ module coretest(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
+  // Command constants
 
+  // Response constants
+
+  // FSM states.
+  parameter CTRL_IDLE      = 8'h00;
+
+  parameter CTRL_RX_START  = 8'h10;
+  parameter CTRL_RX_BYTES  = 8'h11;
+  parameter CTRL_RX_END    = 8'h12;
+
+  parameter CTRL_TX_START  = 8'h20;
+  parameter CTRL_TX_BYTES  = 8'h21;
+  parameter CTRL_TX_END    = 8'h22;
+  
+  parameter CTRL_RST_START = 8'h30;
+  parameter CTRL_RST_END   = 8'h31;
+
+  parameter CTRL_RD_START  = 8'h50;
+  parameter CTRL_RD_END    = 8'h51;
+
+  parameter CTRL_WR_START  = 8'h60;
+  parameter CTRL_WR_END    = 8'h61;
+                            
   
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-
+  reg [7 : 0] coretest_ctrl_reg;
+  reg [7 : 0] coretest_ctrl_new;
+  reg         coretest_ctrl_we;
+  
   
   //----------------------------------------------------------------
   // Wires.
@@ -99,13 +125,86 @@ module coretest(
     begin : reg_update
       if (!reset_n)
         begin
-
+          coretest_ctrl_reg <= CTRL_IDLE;
         end
       else
         begin
-
+          if (coretest_ctrl_we)
+            begin
+              coretest_ctrl_reg <= coretest_ctrl_new;
+            end
         end
     end // reg_update
+
+  
+  //----------------------------------------------------------------
+  // coretest_ctrl
+  //
+  // Control FSM logic.
+  //----------------------------------------------------------------
+  always @*
+    begin : coretest_ctrl
+      // Default assignments.
+      coretest_ctrl_new = CTRL_IDLE;
+      coretest_ctrl_we  = 0;
+
+      case (coretest_ctrl_reg)
+        CTRL_RX_START:
+          begin
+          end
+
+        CTRL_RX_BYTES:
+          begin
+          end
+
+        CTRL_RX_END:
+          begin
+          end
+
+        CTRL_TX_START:
+          begin
+          end
+
+        CTRL_TX_BYTES:
+          begin
+          end
+
+        CTRL_TX_END:
+          begin
+          end
+  
+        CTRL_RST_START:
+          begin
+          end
+
+        CTRL_RST_END:
+          begin
+          end
+
+        CTRL_RD_START:
+          begin
+          end
+
+        CTRL_RD_END:
+          begin
+          end
+        
+        CTRL_WR_START:
+          begin
+          end
+
+        CTRL_WR_END: 
+          begin
+          end
+
+        default:
+          begin
+            // If we encounter an unknown state we move 
+            // back to idle.
+            coretest_ctrl_we = 1;
+          end
+      endcase // case (coretest_ctrl_reg)
+    end // coretest_ctrl
   
 endmodule // cttest
 
