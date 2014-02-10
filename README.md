@@ -19,6 +19,12 @@ write commands from an external interface. These commands are sent to
 the core being tested and the response is then returned to the host
 using the same extarnal interface.
 
+The communication interface is a byte wide data interface with
+handshake. The interface to the core to be tested is a memory like
+interface with chip select, write enable and 16-bit address and 32-bit
+data widths.
+
+
 ## Protocol ##
 Coretest uses a simple command-response protocol to allow a host to
 control the test functionality.
