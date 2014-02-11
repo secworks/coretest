@@ -142,12 +142,14 @@ byte. These bytes are:
 
 ## Status ##
 ***(2014-02-11):***
+
 Added information about the architecture and protocols. Updated the
 command and response with explicit read and write ok responses. Some
 cleanup of the description.
 
 
 ***(2014-02-10):***
+
 Initial version of the project. Based on previous cttest project but
 renamed and with new (ideas) about the test architecture. Specified
 command and response protocol.
