@@ -69,6 +69,8 @@ module test_core(
   parameter CORE_TYPE_0 = 32'h30303030; // "00000"
   parameter CORE_TYPE_1 = 32'h30303162; // "001b"
   
+  parameter LED_PIO_DEFAULT = 8'h55;
+  
   
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -109,7 +111,7 @@ module test_core(
       if (reset)
         begin
           rw_reg      <= 32'h00000000;
-          led_pio_reg <= 8'h00;
+          led_pio_reg <= LED_PIO_DEFAULT;
         end
       else
         begin
