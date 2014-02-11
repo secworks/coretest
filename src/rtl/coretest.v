@@ -100,28 +100,21 @@ module coretest(
   
   
   // test_engine states.
-  parameter TEST_IDLE      = 8'h00;
-
-  parameter TEST_PARSE_CMD = 8'h10;
-  
-  parameter TEST_RST_START = 8'h30;
-  parameter TEST_RST_WAIT  = 8'h31;
-  parameter TEST_RST_END   = 8'h32;
-
-  parameter TEST_RD_START  = 8'h50;
-  parameter TEST_RD_WAIT   = 8'h51;
-  parameter TEST_RD_END    = 8'h52;
-
-  parameter TEST_WR_START  = 8'h60;
-  parameter TEST_WR_WAIT   = 8'h61;
-  parameter TEST_WR_END    = 8'h62;
-                            
-  parameter TEST_UNKNOWN   = 8'h80;
-  parameter TEST_ERROR     = 8'h81;
-  parameter TEST_OK        = 8'h81;
-  
-  parameter TEST_TX_INIT   = 8'hc0;
-  parameter TEST_TX_DONE   = 8'hc1;
+  parameter TEST_IDLE        = 8'h00;
+  parameter TEST_PARSE_CMD   = 8'h10;
+  parameter TEST_RST_START   = 8'h30;
+  parameter TEST_RST_WAIT    = 8'h31;
+  parameter TEST_RST_END     = 8'h32;
+  parameter TEST_RD_START    = 8'h50;
+  parameter TEST_RD_WAIT     = 8'h51;
+  parameter TEST_RD_END      = 8'h52;
+  parameter TEST_WR_START    = 8'h60;
+  parameter TEST_WR_WAIT     = 8'h61;
+  parameter TEST_WR_END      = 8'h62;
+  parameter TEST_UNKNOWN     = 8'h80;
+  parameter TEST_ERROR       = 8'h81;
+  parameter TEST_OK          = 8'h81;
+  parameter TEST_TX_RESPONSE = 8'hc0;
 
   
   //----------------------------------------------------------------
@@ -151,20 +144,26 @@ module coretest(
   reg [7 : 0]  tx_data_reg;
   reg [7 : 0]  tx_data_new;
   reg          tx_data_we;
-
-  reg [7 : 0]  cmd_reg;
   
   reg          core_reset_reg;
   reg          core_reset_new;
   reg          core_reset_we;
   
   reg          core_cs_reg;
+  reg          core_cs_new;
+  reg          core_cs_we;
+
   reg          core_we_reg;
+  reg          core_we_new;
+  reg          core_we_we;
+
+  reg [7 : 0]  cmd_reg;
   reg [15 : 0] core_address_reg;
   reg [31 : 0] core_write_data_reg;
   reg [31 : 0] core_read_data_reg;
   reg          core_error_reg;
-
+  reg          read_data_error_we;
+  
   reg [3 : 0]  rx_buffer_ptr_reg;
   reg [3 : 0]  rx_buffer_ptr_new;
   reg          rx_buffer_ptr_we;
@@ -208,6 +207,13 @@ module coretest(
   reg cmd_available;
   reg cmd_accepted;
   reg extract_cmd_fields;
+
+  reg         update_tx_buffer;
+  reg [7 : 0] response_type;
+
+
+  reg send_response;
+  reg response_sent;
   
   
   //----------------------------------------------------------------
@@ -235,33 +241,37 @@ module coretest(
     begin: reg_update
       if (!reset_n)
         begin
-          rx_buffer[0]      <= 8'h00;
-          rx_buffer[1]      <= 8'h00;
-          rx_buffer[2]      <= 8'h00;
-          rx_buffer[3]      <= 8'h00;
-          rx_buffer[4]      <= 8'h00;
-          rx_buffer[5]      <= 8'h00;
-          rx_buffer[6]      <= 8'h00;
-          rx_buffer[7]      <= 8'h00;
-          rx_buffer[8]      <= 8'h00;
+          rx_buffer[0]       <= 8'h00;
+          rx_buffer[1]       <= 8'h00;
+          rx_buffer[2]       <= 8'h00;
+          rx_buffer[3]       <= 8'h00;
+          rx_buffer[4]       <= 8'h00;
+          rx_buffer[5]       <= 8'h00;
+          rx_buffer[6]       <= 8'h00;
+          rx_buffer[7]       <= 8'h00;
+          rx_buffer[8]       <= 8'h00;
           
-          tx_buffer[0]      <= 8'h00;
-          tx_buffer[1]      <= 8'h00;
-          tx_buffer[2]      <= 8'h00;
-          tx_buffer[3]      <= 8'h00;
-          tx_buffer[4]      <= 8'h00;
-          tx_buffer[5]      <= 8'h00;
-          tx_buffer[6]      <= 8'h00;
-          tx_buffer[7]      <= 8'h00;
-          tx_buffer[8]      <= 8'h00;
+          tx_buffer[0]       <= 8'h00;
+          tx_buffer[1]       <= 8'h00;
+          tx_buffer[2]       <= 8'h00;
+          tx_buffer[3]       <= 8'h00;
+          tx_buffer[4]       <= 8'h00;
+          tx_buffer[5]       <= 8'h00;
+          tx_buffer[6]       <= 8'h00;
+          tx_buffer[7]       <= 8'h00;
+          tx_buffer[8]       <= 8'h00;
 
-          rx_buffer_ptr_reg <= 4'h0;
+          rx_buffer_ptr_reg  <= 4'h0;
 
-          core_reset_reg    <= 0;
+          core_reset_reg     <= 0;
+          core_cs_reg        <= 0;
+          core_we_reg        <= 0;
+          core_error_reg     <= 0;
+          core_read_data_reg <= 32'h00000000;
           
-          rx_engine_reg     <= RX_IDLE;
-          tx_engine_reg     <= TX_IDLE;
-          test_engine_reg   <= TEST_IDLE;
+          rx_engine_reg      <= RX_IDLE;
+          tx_engine_reg      <= TX_IDLE;
+          test_engine_reg    <= TEST_IDLE;
         end
       else
         begin
@@ -300,6 +310,22 @@ module coretest(
             begin
               core_reset_reg <= core_reset_new;
             end
+
+          if (core_cs_we)
+            begin
+              core_cs_reg <= core_cs_new;
+            end
+
+          if (core_we_we)
+            begin
+              core_we_reg <= core_we_new;
+            end
+          
+          if (read_data_error_we)
+            begin
+              core_error_reg     <= core_error;
+              core_read_data_reg <= core_read_data;
+            end
           
           if (rx_engine_we)
             begin
@@ -328,7 +354,67 @@ module coretest(
   //---------------------------------------------------------------
   always @*
     begin: tx_buffer_logic
+      // Defafult assignments
+      tx_buffert_muxed0 = 8'h00;
+      tx_buffert_muxed1 = 8'h00;
+      tx_buffert_muxed2 = 8'h00;
+      tx_buffert_muxed3 = 8'h00;
+      tx_buffert_muxed4 = 8'h00;
+      tx_buffert_muxed5 = 8'h00;
+      tx_buffert_muxed6 = 8'h00;
+      tx_buffert_muxed7 = 8'h00;
+      tx_buffert_muxed8 = 8'h00;
 
+      tx_buffer_we      = 0;
+
+      if (update_tx_buffer)
+        begin
+          tx_buffer_we = 1;
+          tx_buffert_muxed0 = SOR;
+
+          case (response_type)
+            READ_OK:
+              begin
+                tx_buffert_muxed1 = READ_OK;
+                tx_buffert_muxed2 = core_address_reg[15 : 8];
+                tx_buffert_muxed3 = core_address_reg[7  : 0];
+                tx_buffert_muxed4 = core_read_data_reg[31 : 24];
+                tx_buffert_muxed5 = core_read_data_reg[23 : 16];
+                tx_buffert_muxed6 = core_read_data_reg[15 :  8];
+                tx_buffert_muxed7 = core_read_data_reg[7  :  0];
+                tx_buffert_muxed8 = EOR;
+              end
+
+            WRITE_OK:
+              begin
+                tx_buffert_muxed1 = WRITE_OK;
+                tx_buffert_muxed2 = core_address_reg[15 : 8];
+                tx_buffert_muxed3 = core_address_reg[7  : 0];
+                tx_buffert_muxed4 = EOR;
+              end
+
+            RESET_OK:
+              begin
+                tx_buffert_muxed1 = RESET_OK;
+                tx_buffert_muxed2 = EOR;
+              end
+
+            ERROR:
+              begin
+                tx_buffert_muxed1 = ERROR;
+                tx_buffert_muxed2 = cmd_reg;
+                tx_buffert_muxed3 = EOR;
+              end
+
+            default:
+              begin
+                // Any response type not explicitly defined is treated as UNKNOWN.
+                tx_buffert_muxed1 = UNKNOWN;
+                tx_buffert_muxed2 = cmd_reg;
+                tx_buffert_muxed3 = EOR;
+              end
+          endcase // case (response_type)
+        end
     end // tx_buffer_logic
 
   
@@ -471,6 +557,11 @@ module coretest(
       cmd_accepted = 0;
       
       extract_cmd_fields = 0;
+
+      update_tx_buffer = 0;
+      response_type    = 8'h00;
+
+      send_response = 0;
       
       case (test_engine_reg)
         TEST_IDLE:
@@ -531,14 +622,18 @@ module coretest(
 
         TEST_RST_END:
           begin
-            core_reset_new  = 0;
-            core_reset_we   = 1;
-            test_engine_new = TEST_OK;
-            test_engine_we  = 1;
+            core_reset_new   = 0;
+            core_reset_we    = 1;
+            update_tx_buffer = 1;
+            response_type    = RESET_OK;
+            test_engine_new  = TEST_TX_RESPONSE;
+            test_engine_we   = 1;
           end
 
         TEST_RD_START:
           begin
+            core_cs_new     = 1;
+            core_cs_we      = 1;
             test_engine_new = TEST_RD_WAIT;
             test_engine_we  = 1;
           end
@@ -551,12 +646,31 @@ module coretest(
 
         TEST_RD_END:
           begin
-            test_engine_new = TEST_OK;
+            core_cs_new = 0;
+            core_cs_we  = 1;
+
+            if (core_error)
+              begin
+                update_tx_buffer = 1;
+                response_type    = ERROR;
+              end
+            else
+              begin
+                update_tx_buffer = 1;
+                response_type    = READ_OK;
+              end
+            
+            test_engine_new = TEST_TX_RESPONSE;
             test_engine_we  = 1;
           end
         
         TEST_WR_START:
           begin
+            core_cs_new = 1;
+            core_cs_we  = 1;
+            core_we_new = 1;
+            core_we_we  = 1;
+            
             test_engine_new = TEST_WR_WAIT;
             test_engine_we  = 1;
           end
@@ -569,31 +683,42 @@ module coretest(
 
         TEST_WR_END: 
           begin
-            test_engine_new = TEST_OK;
-            test_engine_we  = 1;
+            core_cs_new = 0;
+            core_cs_we  = 1;
+            core_we_new = 0;
+            core_we_we  = 1;
+
+            if (core_error)
+              begin
+                update_tx_buffer = 1;
+                response_type    = ERROR;
+              end
+            else
+              begin
+                update_tx_buffer = 1;
+                response_type    = WRITE_OK;
+              end
+            
+            test_engine_new  = TEST_TX_RESPONSE;
+            test_engine_we   = 1;
           end
 
         TEST_UNKNOWN:
           begin
-
+            update_tx_buffer = 1;
+            response_type    = UNKNOWN;
+            test_engine_new  = TEST_TX_RESPONSE;
+            test_engine_we   = 1;
           end
 
-        TEST_ERROR:
+        TEST_TX_RESPONSE:
           begin
-
-          end
-
-        TEST_OK:
-          begin
-
-          end
-
-        TEST_TX_INIT:
-          begin
-          end
-        
-        TEST_TX_DONE:
-          begin
+            send_response = 1;
+            if (response_sent)
+              begin
+                test_engine_new = TEST_IDLE;
+                test_engine_we  = 1;
+              end
           end
         
         default:
