@@ -163,6 +163,10 @@ Completed first draft of the RTL for coretest. The RTL is not debugged
 and has not been synthesized. We need to add a testbench and a simple
 test core.
 
+Added a simple test core.
+Adding initial version of UART core that will be used for the host
+interface.
+
 
 ***(2014-02-10):***
 
