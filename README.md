@@ -1,7 +1,9 @@
-coretest
-========
+# coretest #
+============
+Test platform for the [Cryptech Open HSM project](https://cryptech.is/).
+(_Note:The Cryptech certificate is by choice not from a CA and therefore
+not in your brower trust store.__)
 
-Test platform for the Cryptech Open HSM project.
 
 ## Description ##
 This platform and hardware design is used to functionally verfiy cores
@@ -12,6 +14,7 @@ writing 32 bit data words to given addresses.
 
 This project includes cores in Verilog, a testbench as well as host SW
 to talk to the core.
+
 
 ## Architecture ##
 The coretest consists of three state machines:
