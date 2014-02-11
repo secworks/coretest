@@ -106,7 +106,7 @@ module test_core(
   //----------------------------------------------------------------
   always @ (posedge clk)
     begin: reg_update
-      if (!reset_n)
+      if (reset)
         begin
           rw_reg      <= 32'h00000000;
           led_pio_reg <= 8'h00;
