@@ -162,6 +162,12 @@ module coretest(
   reg          rx_buffer_ptr_rst;
   reg          rx_buffer_ptr_inc;
   
+  reg [3 : 0]  tx_buffer_ptr_reg;
+  reg [3 : 0]  tx_buffer_ptr_new;
+  reg          tx_buffer_ptr_we;
+  reg          tx_buffer_ptr_rst;
+  reg          tx_buffer_ptr_inc;
+  
   reg [7 : 0]  rx_buffer [0 : 8];
   reg          rx_buffer_we;
 
@@ -253,6 +259,7 @@ module coretest(
           tx_buffer[8]       <= 8'h00;
 
           rx_buffer_ptr_reg  <= 4'h0;
+          tx_buffer_ptr_reg  <= 4'h0;
 
           core_reset_reg     <= 0;
           core_cs_reg        <= 0;
@@ -287,6 +294,11 @@ module coretest(
           if (rx_buffer_ptr_we)
             begin
               rx_buffer_ptr_reg <= rx_buffer_ptr_new;
+            end
+          
+          if (tx_buffer_ptr_we)
+            begin
+              tx_buffer_ptr_reg <= tx_buffer_ptr_new;
             end
 
           if (extract_cmd_fields)
@@ -433,6 +445,32 @@ module coretest(
           rx_buffer_ptr_we  = 1;
         end
     end // rx_buffer_ptr
+
+  
+  //----------------------------------------------------------------
+  // tx_buffer_ptr
+  //
+  // Logic for the tx buffer pointer. Supports reset and
+  // incremental updates.
+  //----------------------------------------------------------------
+  always @*
+    begin: tx_buffer_ptr
+      // Default assignments
+      tx_buffer_ptr_new = 4'h0;
+      tx_buffer_ptr_we  = 0;
+      
+      if (tx_buffer_ptr_rst)
+        begin
+          tx_buffer_ptr_new = 4'h0;
+          tx_buffer_ptr_we  = 1;
+        end
+      
+      else if (tx_buffer_ptr_inc)
+        begin
+          tx_buffer_ptr_new = tx_buffer_ptr_reg + 1'b1;
+          tx_buffer_ptr_we  = 1;
+        end
+    end // tx_buffer_ptr
   
 
   //----------------------------------------------------------------
