@@ -52,7 +52,7 @@ module coretest(
                 input wire           tx_ack,
                 
                 // Interface to the core being tested.
-                output               core_reset_n,
+                output               core_reset,
                 output wire          core_cs,
                 output wire          core_we,
                 output wire [15 : 0] core_address,
@@ -101,10 +101,10 @@ module coretest(
   
   // test_engine states.
   parameter TEST_IDLE      = 8'h00;
+  parameter TEST_WAIT      = 8'h01;
+  parameter TEST_DONE      = 8'h02;
 
-  parameter TEST_RX_START  = 8'h10;
-  parameter TEST_RX_BYTES  = 8'h11;
-  parameter TEST_RX_END    = 8'h12;
+  parameter TEST_PARSE_CMD = 8'h10;
 
   parameter TEST_TX_START  = 8'h20;
   parameter TEST_TX_BYTES  = 8'h21;
@@ -119,6 +119,9 @@ module coretest(
   parameter TEST_WR_START  = 8'h60;
   parameter TEST_WR_END    = 8'h61;
                             
+  parameter TEST_XX_START  = 8'h80;
+  parameter TEST_XX_END    = 8'h81;
+  
   
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -147,8 +150,10 @@ module coretest(
   reg [7 : 0]  tx_data_reg;
   reg [7 : 0]  tx_data_new;
   reg          tx_data_we;
+
+  reg [7 : 0]  cmd_reg;
   
-  reg          core_reset_n_reg;
+  reg          core_reset_reg;
   reg          core_cs_reg;
   reg          core_we_reg;
   reg [15 : 0] core_address_reg;
@@ -193,17 +198,23 @@ module coretest(
   reg [7 : 0] tx_buffert_muxed6;
   reg [7 : 0] tx_buffert_muxed7;
   reg [7 : 0] tx_buffert_muxed8;
+
+  reg tmp_rx_ack;
+  
+  reg cmd_available;
+  reg cmd_accepted;
+  reg extract_cmd_fields;
   
   
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign rx_ack = rx_ack_reg;
+  assign rx_ack = tmp_rx_ack;
 
   assign tx_syn  = tx_syn_reg;
   assign tx_data = tx_data_reg;
 
-  assign core_reset_n    = core_reset_n_reg;
+  assign core_reset      = core_reset_reg;
   assign core_cs         = core_cs_reg;
   assign core_we         = core_we_reg;
   assign core_address    = core_address_reg;
@@ -266,6 +277,14 @@ module coretest(
               tx_buffer[8] <= tx_buffert_muxed8;
             end 
 
+          if (extract_cmd_fields)
+            begin
+              cmd_reg             <= rx_buffer[1];
+              core_address_reg    <= {rx_buffer[2], rx_buffer[3]};
+              core_write_data_reg <= {rx_buffer[4], rx_buffer[5], 
+                                      rx_buffer[6], rx_buffer[7]};
+            end
+          
           if (rx_buffer_ptr_we)
             begin
               rx_buffer_ptr_reg <= rx_buffer_ptr_new;
@@ -325,23 +344,64 @@ module coretest(
   always @*
     begin: rx_engine
       // Default assignments
-      rx_engine_new = RX_IDLE;
-      rx_engine_we  = 0;
-
+      tmp_rx_ack        = 0;
+      rx_buffer_we      = 0;
       rx_buffer_ptr_rst = 0;
       rx_buffer_ptr_inc = 0;
+      cmd_available     = 0;
+      rx_engine_new     = RX_IDLE;
+      rx_engine_we      = 0;
       
       case (rx_engine_reg)
         RX_IDLE:
           begin
+            if (rx_syn)
+              begin
+                rx_buffer_we  = 1;
+                rx_engine_new = RX_ACK;
+                rx_engine_we  = 1;
+              end
+          end
+        
+        RX_ACK:
+          begin
+            tmp_rx_ack = 1;
+            if (!rx_syn)
+              begin
+                if (rx_buffer[rx_buffer_ptr_reg] == EOC)
+                  begin
+                    rx_engine_new = RX_DONE;
+                    rx_engine_we  = 1;
+                  end
+
+                else
+                  begin
+                    rx_buffer_ptr_inc = 1;
+                    rx_engine_new     = RX_IDLE;
+                    rx_engine_we      = 1;
+                  end
+              end
           end
 
+        RX_DONE:
+          begin
+            cmd_available = 1;
+            if (cmd_accepted)
+              begin
+                rx_buffer_ptr_rst = 1;
+                rx_engine_new     = RX_IDLE;
+                rx_engine_we      = 1;
+              end
+          end
+            
         default:
           begin
+            rx_buffer_ptr_rst = 1;
+            rx_engine_new     = RX_IDLE;
+            rx_engine_we      = 1;
           end
       endcase // case (rx_engine_reg)
     end // rx_engine
-  
 
 
   //----------------------------------------------------------------
@@ -381,21 +441,51 @@ module coretest(
       test_engine_new = TEST_IDLE;
       test_engine_we  = 0;
 
+      cmd_accepted = 0;
+      
+      extract_cmd_fields = 0;
+      
       case (test_engine_reg)
         TEST_IDLE:
           begin
+            if (cmd_available)
+              begin
+                extract_cmd_fields = 1;
+                test_engine_new    = TEST_PARSE_CMD;
+                test_engine_we     = 1;
+              end
           end
         
-        TEST_RX_START:
+        TEST_PARSE_CMD:
           begin
-          end
+            cmd_accepted = 1;
 
-        TEST_RX_BYTES:
-          begin
-          end
+            case (cmd_reg)
+              RESET_CMD:
+                begin
+                  test_engine_new = TEST_RST_START;
+                  test_engine_we  = 1;
+                end
 
-        TEST_RX_END:
-          begin
+              READ_CMD:
+                begin
+                  test_engine_new = TEST_RD_START;
+                  test_engine_we  = 1;
+                end
+
+              WRITE_CMD:
+                begin
+                  test_engine_new = TEST_WR_START;
+                  test_engine_we  = 1;
+                end
+
+              default:
+                begin
+                  // Unknown command.
+                  test_engine_new = TEST_XX_START;
+                  test_engine_we  = 1;
+                end
+            endcase // case (cmd_reg)
           end
 
         TEST_TX_START:
@@ -433,7 +523,16 @@ module coretest(
         TEST_WR_END: 
           begin
           end
+        
+        TEST_XX_START:
+          begin
+          end
 
+        TEST_XX_END: 
+          begin
+          end
+
+        
         default:
           begin
             // If we encounter an unknown state we move 
