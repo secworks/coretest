@@ -2,7 +2,7 @@
 Test platform for the [Cryptech Open HSM project](https://cryptech.is/).
 
 (_Note:The Cryptech certificate is by choice not from a CA and therefore
-not in your brower trust store.__)
+not in your brower trust store._)
 
 
 ## Description ##
