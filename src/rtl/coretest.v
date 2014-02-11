@@ -731,7 +731,7 @@ module coretest(
       endcase // case (test_engine_reg)
     end // test_engine
   
-endmodule // cttest
+endmodule // coretest
 
 //======================================================================
 // EOF coretest.v
