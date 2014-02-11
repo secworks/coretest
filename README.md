@@ -160,6 +160,10 @@ Added information about the architecture and protocols. Updated the
 command and response with explicit read and write ok responses. Some
 cleanup of the description.
 
+Completed first draft of the RTL for coretest. The RTL is not debugged
+and has not been synthesized. We need to add a testbench and a simple
+test core.
+
 
 ***(2014-02-10):***
 
