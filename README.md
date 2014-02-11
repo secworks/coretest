@@ -53,6 +53,19 @@ interface with chip select and write enable. The data width is 32-bits
 and the address is 16-bits.
 
 
+## Core under test ##
+The core under test is expected to have a simple memory like interface
+with chip select (cs), write enable (we) signal ports, 16-bit address
+port and separate 32-bit data ports for read and write data. The core is
+also expected to have an error signal port that informs the master if
+any read or write commands given cannot be performed by the core.
+
+***Note:***
+The core reset signal is expected to by active high. The
+core reset signal should be connected to the coretest core_reset
+portutmachine, not to system reset.
+
+
 ## Protocol ##
 Coretest uses a simple command-response protocol to allow a host to
 control the test functionality.
