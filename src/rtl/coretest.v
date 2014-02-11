@@ -90,7 +90,7 @@ module coretest(
   // rx_engine states.
   parameter TX_IDLE = 3'h0;
   parameter TX_SYN  = 3'h1;
-  parameter TX_ACK  = 3'h2;
+  parameter TX_NEXT = 3'h2;
   parameter TX_DONE = 3'h3;
   
   // test_engine states.
@@ -201,6 +201,7 @@ module coretest(
   reg [7 : 0] tx_buffert_muxed8;
 
   reg tmp_rx_ack;
+  reg tmp_tx_syn;
   
   reg cmd_available;
   reg cmd_accepted;
@@ -216,10 +217,10 @@ module coretest(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign rx_ack = tmp_rx_ack;
+  assign rx_ack          = tmp_rx_ack;
 
-  assign tx_syn  = tx_syn_reg;
-  assign tx_data = tx_data_reg;
+  assign tx_syn          = tmp_tx_syn;
+  assign tx_data         = tx_buffer[tx_buffer_ptr_reg];
 
   assign core_reset      = core_reset_reg;
   assign core_cs         = core_cs_reg;
@@ -552,19 +553,63 @@ module coretest(
   always @*
     begin: tx_engine
       // Default assignments
-      tx_engine_new = TX_IDLE;
-      tx_engine_we  = 0;
+      tx_buffer_ptr_rst = 0;
+      tx_buffer_ptr_inc = 0;
+      response_sent     = 0;
+      tmp_tx_syn        = 0;
+      tx_engine_new     = TX_IDLE;
+      tx_engine_we      = 0;
 
       case (tx_engine_reg)
         TX_IDLE:
           begin
+            if (send_response)
+              begin
+                tx_engine_new = TX_SYN;
+                tx_engine_we  = 1;
+              end
           end
 
+        TX_SYN:
+          begin
+            tmp_tx_syn = 1;
+            if (tx_ack)
+              begin
+                tx_engine_new = TX_NEXT;
+                tx_engine_we  = 1;
+              end                
+          end
+        
+        TX_NEXT:
+          begin
+            if (tx_buffer[tx_buffer_ptr_reg] == EOR) 
+              begin
+                tx_buffer_ptr_inc = 1;
+                tx_engine_new     = TX_SYN;
+                tx_engine_we      = 1;
+              end
+            else
+              begin
+                tx_engine_new = TX_DONE;
+                tx_engine_we  = 1;
+              end
+          end
+
+        TX_DONE:
+          begin
+            tx_buffer_ptr_rst = 1;
+            response_sent     = 1;
+            tx_engine_new     = TX_IDLE;
+            tx_engine_we      = 1;
+          end
+        
         default:
           begin
+            tx_engine_new = TX_IDLE;
+            tx_engine_we  = 1;
           end
       endcase // case (tx_engine_reg)
-    end // rx_engine
+    end // tx_engine
   
   
   //----------------------------------------------------------------
