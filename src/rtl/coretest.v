@@ -156,6 +156,12 @@ module coretest(
   reg [31 : 0] core_read_data_reg;
   reg          core_error_reg;
 
+  reg [3 : 0]  rx_buffer_ptr_reg;
+  reg [3 : 0]  rx_buffer_ptr_new;
+  reg          rx_buffer_ptr_we;
+  reg          rx_buffer_ptr_rst;
+  reg          rx_buffer_ptr_inc;
+  
   reg [7 : 0]  rx_buffer [0 : 8];
   reg          rx_buffer_we;
 
@@ -178,6 +184,15 @@ module coretest(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
+  reg [7 : 0] tx_buffert_muxed0;
+  reg [7 : 0] tx_buffert_muxed1;
+  reg [7 : 0] tx_buffert_muxed2;
+  reg [7 : 0] tx_buffert_muxed3;
+  reg [7 : 0] tx_buffert_muxed4;
+  reg [7 : 0] tx_buffert_muxed5;
+  reg [7 : 0] tx_buffert_muxed6;
+  reg [7 : 0] tx_buffert_muxed7;
+  reg [7 : 0] tx_buffert_muxed8;
   
   
   //----------------------------------------------------------------
@@ -205,12 +220,57 @@ module coretest(
     begin: reg_update
       if (!reset_n)
         begin
-          rx_engine       <= RX_IDLE;
-          tx_engine       <= TX_IDLE;
-          test_engine_reg <= TEST_IDLE;
+          rx_buffer[0]      <= 8'h00;
+          rx_buffer[1]      <= 8'h00;
+          rx_buffer[2]      <= 8'h00;
+          rx_buffer[3]      <= 8'h00;
+          rx_buffer[4]      <= 8'h00;
+          rx_buffer[5]      <= 8'h00;
+          rx_buffer[6]      <= 8'h00;
+          rx_buffer[7]      <= 8'h00;
+          rx_buffer[8]      <= 8'h00;
+          
+          tx_buffer[0]      <= 8'h00;
+          tx_buffer[1]      <= 8'h00;
+          tx_buffer[2]      <= 8'h00;
+          tx_buffer[3]      <= 8'h00;
+          tx_buffer[4]      <= 8'h00;
+          tx_buffer[5]      <= 8'h00;
+          tx_buffer[6]      <= 8'h00;
+          tx_buffer[7]      <= 8'h00;
+          tx_buffer[8]      <= 8'h00;
+
+          rx_buffer_ptr_reg <= 4'h0;
+          
+          rx_engine         <= RX_IDLE;
+          tx_engine         <= TX_IDLE;
+          test_engine_reg   <= TEST_IDLE;
         end
       else
         begin
+          if (rx_buffer_we)
+            begin
+              rx_buffer[rx_buffer_ptr_reg] <= rx_data;
+            end
+          
+          if (tx_buffer_we)
+            begin
+              tx_buffer[0] <= tx_buffert_muxed0;
+              tx_buffer[1] <= tx_buffert_muxed1;
+              tx_buffer[2] <= tx_buffert_muxed2;
+              tx_buffer[3] <= tx_buffert_muxed3;
+              tx_buffer[4] <= tx_buffert_muxed4;
+              tx_buffer[5] <= tx_buffert_muxed5;
+              tx_buffer[6] <= tx_buffert_muxed6;
+              tx_buffer[7] <= tx_buffert_muxed7;
+              tx_buffer[8] <= tx_buffert_muxed8;
+            end 
+
+          if (rx_buffer_ptr_we)
+            begin
+              rx_buffer_ptr_reg <= rx_buffer_ptr_new;
+            end
+          
           if (rx_engine_we)
             begin
               rx_engine_reg <= rx_engine_new;
@@ -230,6 +290,32 @@ module coretest(
 
 
   //----------------------------------------------------------------
+  // rx_buffer_ptr
+  //
+  // Logic for the rx buffer pointer. Supports reset and
+  // incremental updates.
+  //----------------------------------------------------------------
+  always @*
+    begin: rx_buffer_ptr
+      // Default assignments
+      rx_buffer_ptr_new = 4'h0;
+      rx_buffer_ptr_we  = 0;
+      
+      if (rx_buffer_ptr_rst)
+        begin
+          rx_buffer_ptr_new = 4'h0;
+          rx_buffer_ptr_we  = 1;
+        end
+      
+      else if (rx_buffer_ptr_inc)
+        begin
+          rx_buffer_ptr_new = rx_buffer_ptr_reg + 1'b1;
+          rx_buffer_ptr_we  = 1;
+        end
+    end // rx_buffer_ptr
+  
+
+  //----------------------------------------------------------------
   // rx_engine
   //
   // FSM responsible for handling receiving message bytes from the
@@ -242,6 +328,9 @@ module coretest(
       rx_engine_new = RX_IDLE;
       rx_engine_we  = 0;
 
+      rx_buffer_ptr_rst = 0;
+      rx_buffer_ptr_inc = 0;
+      
       case (rx_engine_reg)
         RX_IDLE:
           begin
