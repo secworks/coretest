@@ -63,7 +63,7 @@ any read or write commands given cannot be performed by the core.
 ***Note:***
 The core reset signal is expected to by active high. The
 core reset signal should be connected to the coretest core_reset
-portutmachine, not to system reset.
+port, not to system reset.
 
 
 ## Protocol ##
