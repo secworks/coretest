@@ -66,38 +66,58 @@ module coretest(
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   // Command constants.
-  parameter SOC = 8'h55;
-  parameter EOC = 8'haa;
+  parameter SOC       = 8'h55;
+  parameter EOC       = 8'haa;
 
-  parameter RST_CMD = 8'h01; 
-  parameter RD_CMD  = 8'h10; 
-  parameter WR_CMD  = 8'h20; 
+  parameter RESET_CMD = 8'h01; 
+  parameter READ_CMD  = 8'h10; 
+  parameter WRITE_CMD = 8'h11; 
 
   
   // Response constants.
-  parameter SOR = 8'haa;
-  parameter EOR = 8'h55;
+  parameter SOR      = 8'haa;
+  parameter EOR      = 8'h55;
 
+  parameter UNKNOWN  = 8'hfe;
+  parameter ERROR    = 8'hfd;
+  parameter READ_OK  = 8'h7f;
+  parameter WRITE_OK = 8'h7e;
+  parameter RESET_OK = 8'h7d;
+
+
+  // rx_engine states.
+  parameter RX_IDLE = 3'h0;
+  parameter RX_SYN  = 3'h1;
+  parameter RX_ACK  = 3'h2;
+  parameter RX_DONE = 3'h3;
+
+
+  // rx_engine states.
+  parameter TX_IDLE = 3'h0;
+  parameter TX_SYN  = 3'h1;
+  parameter TX_ACK  = 3'h2;
+  parameter TX_DONE = 3'h3;
   
-  // FSM states.
-  parameter CTRL_IDLE      = 8'h00;
-
-  parameter CTRL_RX_START  = 8'h10;
-  parameter CTRL_RX_BYTES  = 8'h11;
-  parameter CTRL_RX_END    = 8'h12;
-
-  parameter CTRL_TX_START  = 8'h20;
-  parameter CTRL_TX_BYTES  = 8'h21;
-  parameter CTRL_TX_END    = 8'h22;
   
-  parameter CTRL_RST_START = 8'h30;
-  parameter CTRL_RST_END   = 8'h31;
+  // test_engine states.
+  parameter TEST_IDLE      = 8'h00;
 
-  parameter CTRL_RD_START  = 8'h50;
-  parameter CTRL_RD_END    = 8'h51;
+  parameter TEST_RX_START  = 8'h10;
+  parameter TEST_RX_BYTES  = 8'h11;
+  parameter TEST_RX_END    = 8'h12;
 
-  parameter CTRL_WR_START  = 8'h60;
-  parameter CTRL_WR_END    = 8'h61;
+  parameter TEST_TX_START  = 8'h20;
+  parameter TEST_TX_BYTES  = 8'h21;
+  parameter TEST_TX_END    = 8'h22;
+  
+  parameter TEST_RST_START = 8'h30;
+  parameter TEST_RST_END   = 8'h31;
+
+  parameter TEST_RD_START  = 8'h50;
+  parameter TEST_RD_END    = 8'h51;
+
+  parameter TEST_WR_START  = 8'h60;
+  parameter TEST_WR_END    = 8'h61;
                             
   
   //----------------------------------------------------------------
@@ -128,7 +148,6 @@ module coretest(
   reg [7 : 0]  tx_data_new;
   reg          tx_data_we;
   
-  
   reg          core_reset_n_reg;
   reg          core_cs_reg;
   reg          core_we_reg;
@@ -136,10 +155,18 @@ module coretest(
   reg [31 : 0] core_write_data_reg;
   reg [31 : 0] core_read_data_reg;
   reg          core_error_reg;
+
+  reg [2 : 0]  rx_engine_reg;
+  reg [2 : 0]  rx_engine_new;
+  reg          rx_engine_we;
   
-  reg [7 : 0] coretest_ctrl_reg;
-  reg [7 : 0] coretest_ctrl_new;
-  reg         coretest_ctrl_we;
+  reg [2 : 0]  tx_engine_reg;
+  reg [2 : 0]  tx_engine_new;
+  reg          tx_engine_we;
+  
+  reg [7 : 0]  test_engine_reg;
+  reg [7 : 0]  test_engine_new;
+  reg          test_engine_we;
 
   
   //----------------------------------------------------------------
@@ -169,78 +196,146 @@ module coretest(
   // active low reset. All registers have write enable.
   //----------------------------------------------------------------
   always @ (posedge clk)
-    begin : reg_update
+    begin: reg_update
       if (!reset_n)
         begin
-          coretest_ctrl_reg <= CTRL_IDLE;
+          rx_engine       <= RX_IDLE;
+          tx_engine       <= TX_IDLE;
+          test_engine_reg <= TEST_IDLE;
         end
       else
         begin
-          if (coretest_ctrl_we)
+          if (rx_engine_we)
             begin
-              coretest_ctrl_reg <= coretest_ctrl_new;
+              rx_engine_reg <= rx_engine_new;
+            end
+          
+          if (tx_engine_we)
+            begin
+              tx_engine_reg <= tx_engine_new;
+            end
+          
+          if (test_engine_we)
+            begin
+              test_engine_reg <= test_engine_new;
             end
         end
     end // reg_update
 
-  
+
   //----------------------------------------------------------------
-  // coretest_ctrl
+  // rx_engine
   //
-  // Control FSM logic.
+  // FSM responsible for handling receiving message bytes from the
+  // host interface and signalling the test engine that there is
+  // a new command to be executed.
   //----------------------------------------------------------------
   always @*
-    begin : coretest_ctrl
-      // Default assignments.
-      coretest_ctrl_new = CTRL_IDLE;
-      coretest_ctrl_we  = 0;
+    begin: rx_engine
+      // Default assignments
+      rx_engine_new = RX_IDLE;
+      rx_engine_we  = 0;
 
-      case (coretest_ctrl_reg)
-        CTRL_RX_START:
+      case (rx_engine_reg)
+        RX_IDLE:
           begin
           end
 
-        CTRL_RX_BYTES:
+        default:
           begin
           end
-
-        CTRL_RX_END:
-          begin
-          end
-
-        CTRL_TX_START:
-          begin
-          end
-
-        CTRL_TX_BYTES:
-          begin
-          end
-
-        CTRL_TX_END:
-          begin
-          end
+      endcase // case (rx_engine_reg)
+    end // rx_engine
   
-        CTRL_RST_START:
+
+
+  //----------------------------------------------------------------
+  // tx_engine
+  //
+  // FSM responsible for handling transmitting message bytes
+  // to the host interface.
+  //----------------------------------------------------------------
+  always @*
+    begin: tx_engine
+      // Default assignments
+      tx_engine_new = TX_IDLE;
+      tx_engine_we  = 0;
+
+      case (tx_engine_reg)
+        TX_IDLE:
           begin
           end
 
-        CTRL_RST_END:
+        default:
           begin
           end
+      endcase // case (tx_engine_reg)
+    end // rx_engine
+  
+  
+  //----------------------------------------------------------------
+  // test_engine
+  //
+  // Test engine FSM logic. Parses received commands, tries to
+  // execute the commands and assmbles the response to the
+  // given commands.
+  //----------------------------------------------------------------
+  always @*
+    begin: test_engine
+      // Default assignments.
+      test_engine_new = TEST_IDLE;
+      test_engine_we  = 0;
 
-        CTRL_RD_START:
-          begin
-          end
-
-        CTRL_RD_END:
+      case (test_engine_reg)
+        TEST_IDLE:
           begin
           end
         
-        CTRL_WR_START:
+        TEST_RX_START:
           begin
           end
 
-        CTRL_WR_END: 
+        TEST_RX_BYTES:
+          begin
+          end
+
+        TEST_RX_END:
+          begin
+          end
+
+        TEST_TX_START:
+          begin
+          end
+
+        TEST_TX_BYTES:
+          begin
+          end
+
+        TEST_TX_END:
+          begin
+          end
+  
+        TEST_RST_START:
+          begin
+          end
+
+        TEST_RST_END:
+          begin
+          end
+
+        TEST_RD_START:
+          begin
+          end
+
+        TEST_RD_END:
+          begin
+          end
+        
+        TEST_WR_START:
+          begin
+          end
+
+        TEST_WR_END: 
           begin
           end
 
@@ -250,11 +345,11 @@ module coretest(
             // back to idle.
             coretest_ctrl_we = 1;
           end
-      endcase // case (coretest_ctrl_reg)
-    end // coretest_ctrl
+      endcase // case (test_engine_reg)
+    end // test_engine
   
 endmodule // cttest
 
 //======================================================================
-// EOF coretest
+// EOF coretest.v
 //======================================================================
