@@ -149,7 +149,6 @@ cleanup of the description.
 
 ***(2014-02-10):***
 Initial version of the project. Based on previous cttest project but
-renamed and with new (ideas) about the test architecture.
-
-Speciefied command and response protocol.
+renamed and with new (ideas) about the test architecture. Specified
+command and response protocol.
 
