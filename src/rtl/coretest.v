@@ -156,6 +156,12 @@ module coretest(
   reg [31 : 0] core_read_data_reg;
   reg          core_error_reg;
 
+  reg [7 : 0]  rx_buffer [0 : 8];
+  reg          rx_buffer_we;
+
+  reg [7 : 0]  tx_buffer [0 : 8];
+  reg          tx_buffer_we;
+  
   reg [2 : 0]  rx_engine_reg;
   reg [2 : 0]  rx_engine_new;
   reg          rx_engine_we;
