@@ -68,22 +68,18 @@ module coretest(
   // Command constants.
   parameter SOC       = 8'h55;
   parameter EOC       = 8'haa;
-
   parameter RESET_CMD = 8'h01; 
   parameter READ_CMD  = 8'h10; 
   parameter WRITE_CMD = 8'h11; 
-
   
   // Response constants.
   parameter SOR      = 8'haa;
   parameter EOR      = 8'h55;
-
   parameter UNKNOWN  = 8'hfe;
   parameter ERROR    = 8'hfd;
   parameter READ_OK  = 8'h7f;
   parameter WRITE_OK = 8'h7e;
   parameter RESET_OK = 8'h7d;
-
 
   // rx_engine states.
   parameter RX_IDLE = 3'h0;
@@ -91,30 +87,26 @@ module coretest(
   parameter RX_ACK  = 3'h2;
   parameter RX_DONE = 3'h3;
 
-
   // rx_engine states.
   parameter TX_IDLE = 3'h0;
   parameter TX_SYN  = 3'h1;
   parameter TX_ACK  = 3'h2;
   parameter TX_DONE = 3'h3;
   
-  
   // test_engine states.
-  parameter TEST_IDLE        = 8'h00;
-  parameter TEST_PARSE_CMD   = 8'h10;
-  parameter TEST_RST_START   = 8'h30;
-  parameter TEST_RST_WAIT    = 8'h31;
-  parameter TEST_RST_END     = 8'h32;
-  parameter TEST_RD_START    = 8'h50;
-  parameter TEST_RD_WAIT     = 8'h51;
-  parameter TEST_RD_END      = 8'h52;
-  parameter TEST_WR_START    = 8'h60;
-  parameter TEST_WR_WAIT     = 8'h61;
-  parameter TEST_WR_END      = 8'h62;
-  parameter TEST_UNKNOWN     = 8'h80;
-  parameter TEST_ERROR       = 8'h81;
-  parameter TEST_OK          = 8'h81;
-  parameter TEST_TX_RESPONSE = 8'hc0;
+  parameter TEST_IDLE          = 8'h00;
+  parameter TEST_PARSE_CMD     = 8'h10;
+  parameter TEST_RST_START     = 8'h30;
+  parameter TEST_RST_WAIT      = 8'h31;
+  parameter TEST_RST_END       = 8'h32;
+  parameter TEST_RD_START      = 8'h50;
+  parameter TEST_RD_WAIT       = 8'h51;
+  parameter TEST_RD_END        = 8'h52;
+  parameter TEST_WR_START      = 8'h60;
+  parameter TEST_WR_WAIT       = 8'h61;
+  parameter TEST_WR_END        = 8'h62;
+  parameter TEST_UNKNOWN       = 8'h80;
+  parameter TEST_SEND_RESPONSE = 8'hc0;
 
   
   //----------------------------------------------------------------
@@ -162,7 +154,7 @@ module coretest(
   reg [31 : 0] core_write_data_reg;
   reg [31 : 0] core_read_data_reg;
   reg          core_error_reg;
-  reg          read_data_error_we;
+  reg          sample_core_output;
   
   reg [3 : 0]  rx_buffer_ptr_reg;
   reg [3 : 0]  rx_buffer_ptr_new;
@@ -210,7 +202,6 @@ module coretest(
 
   reg         update_tx_buffer;
   reg [7 : 0] response_type;
-
 
   reg send_response;
   reg response_sent;
@@ -321,7 +312,7 @@ module coretest(
               core_we_reg <= core_we_new;
             end
           
-          if (read_data_error_we)
+          if (sample_core_output)
             begin
               core_error_reg     <= core_error;
               core_read_data_reg <= core_read_data;
@@ -548,20 +539,16 @@ module coretest(
   always @*
     begin: test_engine
       // Default assignments.
-      test_engine_new = TEST_IDLE;
-      test_engine_we  = 0;
-
-      core_reset_new = 0;
-      core_reset_we  = 0;
-      
-      cmd_accepted = 0;
-      
+      core_reset_new     = 0;
+      core_reset_we      = 0;
+      cmd_accepted       = 0;
       extract_cmd_fields = 0;
-
-      update_tx_buffer = 0;
-      response_type    = 8'h00;
-
-      send_response = 0;
+      sample_core_output = 0;
+      update_tx_buffer   = 0;
+      response_type      = 8'h00;
+      send_response      = 0;
+      test_engine_new    = TEST_IDLE;
+      test_engine_we     = 0;
       
       case (test_engine_reg)
         TEST_IDLE:
@@ -626,7 +613,7 @@ module coretest(
             core_reset_we    = 1;
             update_tx_buffer = 1;
             response_type    = RESET_OK;
-            test_engine_new  = TEST_TX_RESPONSE;
+            test_engine_new  = TEST_SEND_RESPONSE;
             test_engine_we   = 1;
           end
 
@@ -640,16 +627,18 @@ module coretest(
 
         TEST_RD_WAIT:
           begin
-            test_engine_new = TEST_RD_END;
-            test_engine_we  = 1;
+            sample_core_output = 1;
+            test_engine_new    = TEST_RD_END;
+            test_engine_we     = 1;
           end
 
         TEST_RD_END:
           begin
-            core_cs_new = 0;
-            core_cs_we  = 1;
+            core_cs_new        = 0;
+            core_cs_we         = 1;
+            sample_core_output = 0;
 
-            if (core_error)
+            if (core_error_reg)
               begin
                 update_tx_buffer = 1;
                 response_type    = ERROR;
@@ -660,7 +649,7 @@ module coretest(
                 response_type    = READ_OK;
               end
             
-            test_engine_new = TEST_TX_RESPONSE;
+            test_engine_new = TEST_SEND_RESPONSE;
             test_engine_we  = 1;
           end
         
@@ -677,18 +666,20 @@ module coretest(
         
         TEST_WR_WAIT:
           begin
-            test_engine_new = TEST_WR_END;
-            test_engine_we  = 1;
+            sample_core_output = 1;
+            test_engine_new  = TEST_WR_END;
+            test_engine_we   = 1;
           end
 
         TEST_WR_END: 
           begin
-            core_cs_new = 0;
-            core_cs_we  = 1;
-            core_we_new = 0;
-            core_we_we  = 1;
+            core_cs_new        = 0;
+            core_cs_we         = 1;
+            core_we_new        = 0;
+            core_we_we         = 1;
+            sample_core_output = 0;
 
-            if (core_error)
+            if (core_error_reg)
               begin
                 update_tx_buffer = 1;
                 response_type    = ERROR;
@@ -699,7 +690,7 @@ module coretest(
                 response_type    = WRITE_OK;
               end
             
-            test_engine_new  = TEST_TX_RESPONSE;
+            test_engine_new  = TEST_SEND_RESPONSE;
             test_engine_we   = 1;
           end
 
@@ -707,11 +698,11 @@ module coretest(
           begin
             update_tx_buffer = 1;
             response_type    = UNKNOWN;
-            test_engine_new  = TEST_TX_RESPONSE;
+            test_engine_new  = TEST_SEND_RESPONSE;
             test_engine_we   = 1;
           end
 
-        TEST_TX_RESPONSE:
+        TEST_SEND_RESPONSE:
           begin
             send_response = 1;
             if (response_sent)
