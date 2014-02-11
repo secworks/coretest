@@ -101,27 +101,28 @@ module coretest(
   
   // test_engine states.
   parameter TEST_IDLE      = 8'h00;
-  parameter TEST_WAIT      = 8'h01;
-  parameter TEST_DONE      = 8'h02;
 
   parameter TEST_PARSE_CMD = 8'h10;
-
-  parameter TEST_TX_START  = 8'h20;
-  parameter TEST_TX_BYTES  = 8'h21;
-  parameter TEST_TX_END    = 8'h22;
   
   parameter TEST_RST_START = 8'h30;
-  parameter TEST_RST_END   = 8'h31;
+  parameter TEST_RST_WAIT  = 8'h31;
+  parameter TEST_RST_END   = 8'h32;
 
   parameter TEST_RD_START  = 8'h50;
-  parameter TEST_RD_END    = 8'h51;
+  parameter TEST_RD_WAIT   = 8'h51;
+  parameter TEST_RD_END    = 8'h52;
 
   parameter TEST_WR_START  = 8'h60;
-  parameter TEST_WR_END    = 8'h61;
+  parameter TEST_WR_WAIT   = 8'h61;
+  parameter TEST_WR_END    = 8'h62;
                             
-  parameter TEST_XX_START  = 8'h80;
-  parameter TEST_XX_END    = 8'h81;
+  parameter TEST_UNKNOWN   = 8'h80;
+  parameter TEST_ERROR     = 8'h81;
+  parameter TEST_OK        = 8'h81;
   
+  parameter TEST_TX_INIT   = 8'hc0;
+  parameter TEST_TX_DONE   = 8'hc1;
+
   
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -154,6 +155,9 @@ module coretest(
   reg [7 : 0]  cmd_reg;
   
   reg          core_reset_reg;
+  reg          core_reset_new;
+  reg          core_reset_we;
+  
   reg          core_cs_reg;
   reg          core_we_reg;
   reg [15 : 0] core_address_reg;
@@ -252,6 +256,8 @@ module coretest(
           tx_buffer[8]      <= 8'h00;
 
           rx_buffer_ptr_reg <= 4'h0;
+
+          core_reset_reg    <= 0;
           
           rx_engine_reg     <= RX_IDLE;
           tx_engine_reg     <= TX_IDLE;
@@ -276,6 +282,11 @@ module coretest(
               tx_buffer[7] <= tx_buffert_muxed7;
               tx_buffer[8] <= tx_buffert_muxed8;
             end 
+          
+          if (rx_buffer_ptr_we)
+            begin
+              rx_buffer_ptr_reg <= rx_buffer_ptr_new;
+            end
 
           if (extract_cmd_fields)
             begin
@@ -284,10 +295,10 @@ module coretest(
               core_write_data_reg <= {rx_buffer[4], rx_buffer[5], 
                                       rx_buffer[6], rx_buffer[7]};
             end
-          
-          if (rx_buffer_ptr_we)
+
+          if (core_reset_we)
             begin
-              rx_buffer_ptr_reg <= rx_buffer_ptr_new;
+              core_reset_reg <= core_reset_new;
             end
           
           if (rx_engine_we)
@@ -307,7 +318,20 @@ module coretest(
         end
     end // reg_update
 
+  
+  //---------------------------------------------------------------
+  // tx_buffer_logic
+  //
+  // Update logic for the tx-buffer. Given the response type and
+  // the correct contents of the tx_buffer is assembled when
+  // and update is signalled by the test engine.
+  //---------------------------------------------------------------
+  always @*
+    begin: tx_buffer_logic
 
+    end // tx_buffer_logic
+
+  
   //----------------------------------------------------------------
   // rx_buffer_ptr
   //
@@ -441,6 +465,9 @@ module coretest(
       test_engine_new = TEST_IDLE;
       test_engine_we  = 0;
 
+      core_reset_new = 0;
+      core_reset_we  = 0;
+      
       cmd_accepted = 0;
       
       extract_cmd_fields = 0;
@@ -482,56 +509,92 @@ module coretest(
               default:
                 begin
                   // Unknown command.
-                  test_engine_new = TEST_XX_START;
+                  test_engine_new = TEST_UNKNOWN;
                   test_engine_we  = 1;
                 end
             endcase // case (cmd_reg)
           end
-
-        TEST_TX_START:
-          begin
-          end
-
-        TEST_TX_BYTES:
-          begin
-          end
-
-        TEST_TX_END:
-          begin
-          end
   
         TEST_RST_START:
           begin
+            core_reset_new  = 1;
+            core_reset_we   = 1;
+            test_engine_new = TEST_RST_WAIT;
+            test_engine_we  = 1;
+          end
+  
+        TEST_RST_WAIT:
+          begin
+            test_engine_new = TEST_RST_END;
+            test_engine_we  = 1;
           end
 
         TEST_RST_END:
           begin
+            core_reset_new  = 0;
+            core_reset_we   = 1;
+            test_engine_new = TEST_OK;
+            test_engine_we  = 1;
           end
 
         TEST_RD_START:
           begin
+            test_engine_new = TEST_RD_WAIT;
+            test_engine_we  = 1;
+          end
+
+        TEST_RD_WAIT:
+          begin
+            test_engine_new = TEST_RD_END;
+            test_engine_we  = 1;
           end
 
         TEST_RD_END:
           begin
+            test_engine_new = TEST_OK;
+            test_engine_we  = 1;
           end
         
         TEST_WR_START:
           begin
+            test_engine_new = TEST_WR_WAIT;
+            test_engine_we  = 1;
+          end
+        
+        TEST_WR_WAIT:
+          begin
+            test_engine_new = TEST_WR_END;
+            test_engine_we  = 1;
           end
 
         TEST_WR_END: 
           begin
+            test_engine_new = TEST_OK;
+            test_engine_we  = 1;
+          end
+
+        TEST_UNKNOWN:
+          begin
+
+          end
+
+        TEST_ERROR:
+          begin
+
+          end
+
+        TEST_OK:
+          begin
+
+          end
+
+        TEST_TX_INIT:
+          begin
           end
         
-        TEST_XX_START:
+        TEST_TX_DONE:
           begin
           end
-
-        TEST_XX_END: 
-          begin
-          end
-
         
         default:
           begin
