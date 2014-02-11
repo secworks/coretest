@@ -152,7 +152,6 @@ byte. These bytes are:
     - 0x7d response code
     - EOR
 
-
 ## Status ##
 ***(2014-02-11):***
 
