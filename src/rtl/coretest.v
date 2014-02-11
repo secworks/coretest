@@ -242,8 +242,8 @@ module coretest(
 
           rx_buffer_ptr_reg <= 4'h0;
           
-          rx_engine         <= RX_IDLE;
-          tx_engine         <= TX_IDLE;
+          rx_engine_reg     <= RX_IDLE;
+          tx_engine_reg     <= TX_IDLE;
           test_engine_reg   <= TEST_IDLE;
         end
       else
@@ -438,7 +438,8 @@ module coretest(
           begin
             // If we encounter an unknown state we move 
             // back to idle.
-            coretest_ctrl_we = 1;
+            test_engine_new = TEST_IDLE;
+            test_engine_we  = 1;
           end
       endcase // case (test_engine_reg)
     end // test_engine
