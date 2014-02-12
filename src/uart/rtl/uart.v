@@ -78,7 +78,7 @@ module uart(
   // center of the bits. I.e.
   // Clock: 50 MHz
   // Bitrate: 115200 bps
-  // Divisor = 50*10E6 / (19200 * 4) = 651
+  // Divisor = 50*10E6 / (19200 * 4) = 651.041666
   parameter DEFAULT_CLK_DIV = 651;
   
   parameter ADDR_CORE_NAME0 = 4'h0;
