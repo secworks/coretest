@@ -94,6 +94,54 @@ module uart(
   reg [15 : 0] clk_div_reg;
   reg [15 : 0] clk_div_new;
   reg          clk_div_we;
+
+  // Rx data buffer with associated
+  // read and write pointers as well
+  // as counter for number of elements
+  // in the buffer.
+  reg [7 : 0] rx_buffer [0 : 15];
+
+  reg [3 : 0] rx_rd_ptr_reg;
+  reg [3 : 0] rx_rd_ptr_new;
+  reg         rx_rd_ptr_we;
+  reg         rx_rd_ptr_rst;
+  reg         rx_rd_ptr_inc;
+
+  reg [3 : 0] rx_wr_ptr_reg;
+  reg [3 : 0] rx_wr_ptr_new;
+  reg         rx_wr_ptr_we;
+  reg         rx_wr_ptr_rst;
+  reg         rx_wr_ptr_inc;
+
+  reg [3 : 0] rx_ctr_reg;
+  reg [3 : 0] rx_ctr_new;
+  reg         rx_ctr_we;
+  reg         rx_ctr_inc;
+  reg         rx_ctr_dec;
+
+  // Tx data buffer with associated
+  // read and write pointers as well
+  // as counter for number of elements
+  // in the buffer.
+  reg [7 : 0] tx_buffer [0 : 15];
+
+  reg [3 : 0] tx_rd_ptr_reg;
+  reg [3 : 0] tx_rd_ptr_new;
+  reg         tx_rd_ptr_we;
+  reg         tx_rd_ptr_rst;
+  reg         tx_rd_ptr_inc;
+
+  reg [3 : 0] tx_wr_ptr_reg;
+  reg [3 : 0] tx_wr_ptr_new;
+  reg         tx_wr_ptr_we;
+  reg         tx_wr_ptr_rst;
+  reg         tx_wr_ptr_inc;
+
+  reg [3 : 0] tx_ctr_reg;
+  reg [3 : 0] tx_ctr_new;
+  reg         tx_ctr_we;
+  reg         tx_ctr_inc;
+  reg         tx_ctr_dec;
   
   
   //----------------------------------------------------------------
@@ -121,13 +169,50 @@ module uart(
     begin: reg_update
       if (reset)
         begin
-          clk_div_reg <= DEFAULT_CLK_DIV;
+          rx_rd_ptr_reg <= 4'h0;
+          rx_wr_ptr_reg <= 4'h0;
+          rx_ctr_reg    <= 4'h0;
+          tx_rd_ptr_reg <= 4'h0;
+          tx_wr_ptr_reg <= 4'h0;
+          tx_ctr_reg    <= 4'h0;
+          
+          clk_div_reg   <= DEFAULT_CLK_DIV;
         end
       else
         begin
           if (clk_div_we)
             begin
               clk_div_reg <= clk_div_new;
+            end
+          
+          if (rx_rd_ptr_we)
+            begin
+              rx_rd_ptr_reg <= rx_rd_ptr_new;
+            end
+          
+          if (rx_wr_ptr_we)
+            begin
+              rx_wr_ptr_reg <= rx_wr_ptr_new;
+            end
+          
+          if (rx_ctr_we)
+            begin
+              rx_ctr_reg <= rx_ctr_new;
+            end
+          
+          if (tx_rd_ptr_we)
+            begin
+              tx_rd_ptr_reg <= tx_rd_ptr_new;
+            end
+          
+          if (tx_wr_ptr_we)
+            begin
+              tx_wr_ptr_reg <= tx_wr_ptr_new;
+            end
+          
+          if (tx_ctr_we)
+            begin
+              tx_ctr_reg <= tx_ctr_new;
             end
         end
     end // reg_update
@@ -215,7 +300,6 @@ module uart(
             end
         end
     end
-  
   
 endmodule // uart
 
