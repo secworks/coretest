@@ -180,7 +180,13 @@ module uart(
   //----------------------------------------------------------------
   reg [31 : 0] tmp_read_data;
   reg          tmp_error;
-  
+
+  reg          rx_buffer_empty;
+  reg          rx_buffer_full;
+
+  reg          tx_buffer_empty;
+  reg          tx_buffer_full;
+
   
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
