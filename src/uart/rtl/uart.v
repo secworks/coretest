@@ -389,8 +389,29 @@ module uart(
             end
         end
     end
+
   
+  //----------------------------------------------------------------
+  // loopback_mux
+  //
+  // The mux controlled by the loopback_bit_reg. If set the
+  // interfaces towards the internal system is tied together
+  // making the UART echoing received back to the external host.
+  //----------------------------------------------------------------
+  always @*
+    begin: loopback_mux
+      if (loopback_bit_reg)
+        begin
+          
+        end
+      else
+        begin
+
+        end
+      
+    end // loopback_mux
 endmodule // uart
+
 
 //======================================================================
 // EOF uart.v
