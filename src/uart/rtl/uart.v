@@ -104,6 +104,9 @@ module uart(
   parameter DEFAULT_START_BITS = 2'h1;
   parameter DEFAULT_STOP_BITS  = 2'h1;
   parameter DEFAULT_DATA_BITS  = 4'h08;
+  parameter DEFAULT_PARITY     = 1'h0;
+  parameter DEFAULT_ENABLE     = 1'h1;
+  parameter DEFAULT_LOOPBACK   = 1'h0;
   
   
   //----------------------------------------------------------------
@@ -129,8 +132,8 @@ module uart(
   reg [1 : 0]  stop_bits_new;
   reg          stop_bits_we;
 
-  reg [1 : 0]  data_bits_reg;
-  reg [1 : 0]  data_bits_new;
+  reg [3 : 0]  data_bits_reg;
+  reg [3 : 0]  data_bits_new;
   reg          data_bits_we;
 
   reg          parity_bit_reg;
