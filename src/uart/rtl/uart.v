@@ -88,6 +88,12 @@ module uart(
   parameter ADDR_STAT_RX_FULL = 4'hd; // Stats: Num Rx buffer full events.
   parameter ADDR_STAT_TC_FULL = 4'he; // Stats: Num Tx buffer full events.
 
+  // Core ID constants.
+  parameter CORE_NAME0   = 32'h75617274;  // "uart"
+  parameter CORE_NAME1   = 32'h20202020;  // "    "
+  parameter CORE_TYPE    = 32'h20202031;  // "   1"
+  parameter CORE_VERSION = 32'h302e3031;  // "0.01"
+  
   // The default clock rate is based on target clock frequency
   // divided by the bit rate times in order to hit the
   // center of the bits. I.e.
@@ -95,11 +101,6 @@ module uart(
   // Bitrate: 115200 bps
   // Divisor = 50*10E6 / (19200 * 4) = 651.041666
   parameter DEFAULT_CLK_DIV = 651;
-
-  parameter CORE_NAME0   = 32'h75617274;  // "uart"
-  parameter CORE_NAME1   = 32'h20202020;  // "    "
-  parameter CORE_TYPE    = 32'h20202031;  // "   1"
-  parameter CORE_VERSION = 32'h302e3031;  // "0.01"
 
   parameter DEFAULT_START_BITS = 2'h1;
   parameter DEFAULT_STOP_BITS  = 2'h1;
@@ -139,7 +140,6 @@ module uart(
   reg          parity_bit_reg;
   reg          parity_bit_new;
   reg          parity_bit_we;
-  
   
   // Rx data buffer with associated
   // read and write pointers as well
@@ -221,14 +221,21 @@ module uart(
     begin: reg_update
       if (reset)
         begin
-          rx_rd_ptr_reg <= 4'h0;
-          rx_wr_ptr_reg <= 4'h0;
-          rx_ctr_reg    <= 4'h0;
-          tx_rd_ptr_reg <= 4'h0;
-          tx_wr_ptr_reg <= 4'h0;
-          tx_ctr_reg    <= 4'h0;
+          clk_div_reg      <= DEFAULT_CLK_DIV;
+          start_bits_reg   <= DEFAULT_START_BITS;
+          stop_bits_reg    <= DEFAULT_STOP_BITS;
+          data_bits_reg    <= DEFAULT_DATA_BITS;
+          parity_bit_reg   <= DEFAULT_PARITY;
+          enable_bit_reg   <= DEFAULT_ENABLE;
+          loopback_bit_reg <= DEFAULT_LOOPBACK;
           
-          clk_div_reg   <= DEFAULT_CLK_DIV;
+          rx_rd_ptr_reg    <= 4'h0;
+          rx_wr_ptr_reg    <= 4'h0;
+          rx_ctr_reg       <= 4'h0;
+          tx_rd_ptr_reg    <= 4'h0;
+          tx_wr_ptr_reg    <= 4'h0;
+          tx_ctr_reg       <= 4'h0;
+
         end
       else
         begin
@@ -236,7 +243,37 @@ module uart(
             begin
               clk_div_reg <= clk_div_new;
             end
-          
+
+          if (start_bits_we)
+            begin
+              start_bits_reg <= start_bits_new;
+            end
+
+          if (stop_bits_we)
+            begin
+              stop_bits_reg <= stop_bits_new;
+            end
+
+          if (data_bits_we)
+            begin
+              data_bits_reg <= data_bits_new;
+            end
+
+          if (parity_bit_we)
+            begin
+              parity_bit_reg <= parity_bit_new;
+            end
+
+          if (enable_bit_we)
+            begin
+              enable_bit_reg <= enable_bit_new;
+            end
+
+          if (loopback_bit_we)
+            begin
+              loopback_bit_reg <= loopback_bit_new;
+            end
+
           if (rx_rd_ptr_we)
             begin
               rx_rd_ptr_reg <= rx_rd_ptr_new;
