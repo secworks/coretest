@@ -93,9 +93,9 @@ module uart(
   parameter ADDR_CORE_TYPE    = 4'h2;
   parameter ADDR_CORE_VERSION = 4'h3;
   
-  parameter ADDR_CLK_DIV    = 4'h8;
-  parameter ADDR_CLK_DIV    = 4'h9;
+  parameter ADDR_CRTL         = 4'h8;
 
+  parameter ADDR_CLK_DIV      = 4'ha;
   
   
   //----------------------------------------------------------------
@@ -105,6 +105,27 @@ module uart(
   reg [15 : 0] clk_div_new;
   reg          clk_div_we;
 
+  reg          enable_bit_reg;
+  reg          enable_bit_new;
+  reg          enable_bit_we;
+  
+  reg          loopback_bit_reg;
+  reg          loopback_bit_new;
+  reg          loopback_bit_we;
+  
+  reg [1 : 0]  start_bits_reg;
+  reg [1 : 0]  start_bits_new;
+  reg          start_bits_we;
+
+  reg [1 : 0]  stop_bits_reg;
+  reg [1 : 0]  stop_bits_new;
+  reg          stop_bits_we;
+
+  reg          parity_bit_reg;
+  reg          parity_bit_new;
+  reg          parity_bit_we;
+  
+  
   // Rx data buffer with associated
   // read and write pointers as well
   // as counter for number of elements
