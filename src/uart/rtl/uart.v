@@ -93,9 +93,14 @@ module uart(
   parameter ADDR_CORE_TYPE    = 4'h2;
   parameter ADDR_CORE_VERSION = 4'h3;
   
-  parameter ADDR_CRTL         = 4'h8;
+  parameter ADDR_CRTL         = 4'h8; // Enable/disable. Loopback on/off.
+  parameter ADDR_STATUS       = 4'h9; // Buffer status.
+  parameter ADDR_CONFIG       = 4'ha; // Num start, stop bits. Parity on/off.
+  parameter ADDR_CLK_DIV      = 4'hb; // Clock divisor to set bitrate.
 
-  parameter ADDR_CLK_DIV      = 4'ha;
+  parameter ADDR_STAT_PARITY  = 4'hc; // Stats: Num parity errors detected.
+  parameter ADDR_STAT_RX_FULL = 4'hd; // Stats: Num Rx buffer full events.
+  parameter ADDR_STAT_TC_FULL = 4'he; // Stats: Num Tx buffer full events.
   
   
   //----------------------------------------------------------------
