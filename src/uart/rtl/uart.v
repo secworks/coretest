@@ -73,20 +73,6 @@ module uart(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  // The default clock rate is based on target clock frequency
-  // divided by the bit rate times in order to hit the
-  // center of the bits. I.e.
-  // Clock: 50 MHz
-  // Bitrate: 115200 bps
-  // Divisor = 50*10E6 / (19200 * 4) = 651.041666
-  parameter DEFAULT_CLK_DIV = 651;
-
-  CORE_NAME0   = 32'h75617274;  // "uart"
-  CORE_NAME1   = 32'h20202020;  // "    "
-  CORE_TYPE    = 32'h20202031;  // "   1"
-  CORE_VERSION = 32'h302e3031;  // "0.01"
-
-  
   // API addresses.
   parameter ADDR_CORE_NAME0   = 4'h0;
   parameter ADDR_CORE_NAME1   = 4'h1;
@@ -101,6 +87,23 @@ module uart(
   parameter ADDR_STAT_PARITY  = 4'hc; // Stats: Num parity errors detected.
   parameter ADDR_STAT_RX_FULL = 4'hd; // Stats: Num Rx buffer full events.
   parameter ADDR_STAT_TC_FULL = 4'he; // Stats: Num Tx buffer full events.
+
+  // The default clock rate is based on target clock frequency
+  // divided by the bit rate times in order to hit the
+  // center of the bits. I.e.
+  // Clock: 50 MHz
+  // Bitrate: 115200 bps
+  // Divisor = 50*10E6 / (19200 * 4) = 651.041666
+  parameter DEFAULT_CLK_DIV = 651;
+
+  parameter CORE_NAME0   = 32'h75617274;  // "uart"
+  parameter CORE_NAME1   = 32'h20202020;  // "    "
+  parameter CORE_TYPE    = 32'h20202031;  // "   1"
+  parameter CORE_VERSION = 32'h302e3031;  // "0.01"
+
+  parameter DEFAULT_START_BITS = 2'h1;
+  parameter DEFAULT_STOP_BITS  = 2'h1;
+  parameter DEFAULT_DATA_BITS  = 4'h08;
   
   
   //----------------------------------------------------------------
