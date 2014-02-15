@@ -95,7 +95,7 @@ module uart(
   
   parameter ADDR_CRTL         = 4'h8; // Enable/disable. Loopback on/off.
   parameter ADDR_STATUS       = 4'h9; // Buffer status.
-  parameter ADDR_CONFIG       = 4'ha; // Num start, stop bits. Parity on/off.
+  parameter ADDR_CONFIG       = 4'ha; // Num start, data, stop, parity bits.
   parameter ADDR_CLK_DIV      = 4'hb; // Clock divisor to set bitrate.
 
   parameter ADDR_STAT_PARITY  = 4'hc; // Stats: Num parity errors detected.
@@ -125,6 +125,10 @@ module uart(
   reg [1 : 0]  stop_bits_reg;
   reg [1 : 0]  stop_bits_new;
   reg          stop_bits_we;
+
+  reg [1 : 0]  data_bits_reg;
+  reg [1 : 0]  data_bits_new;
+  reg          data_bits_we;
 
   reg          parity_bit_reg;
   reg          parity_bit_new;
