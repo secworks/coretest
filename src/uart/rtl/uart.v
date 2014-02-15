@@ -81,15 +81,17 @@ module uart(
   // Divisor = 50*10E6 / (19200 * 4) = 651.041666
   parameter DEFAULT_CLK_DIV = 651;
 
-  CORE_NAME0 = 32'h75617274;  // "uart"
-  CORE_NAME1 = 32'h20202020;  // "    "
+  CORE_NAME0   = 32'h75617274;  // "uart"
+  CORE_NAME1   = 32'h20202020;  // "    "
+  CORE_TYPE    = 32'h20202031;  // "   1"
+  CORE_VERSION = 32'h302e3031;  // "0.01"
 
   
   // API addresses.
-  parameter ADDR_CORE_NAME0    = 4'h0;
-  parameter ADDR_CORE_NAME1    = 4'h1;
-  parameter ADDR_CORE_VERSION0 = 4'h2;
-  parameter ADDR_CORE_VERSION1 = 4'h3;
+  parameter ADDR_CORE_NAME0   = 4'h0;
+  parameter ADDR_CORE_NAME1   = 4'h1;
+  parameter ADDR_CORE_TYPE    = 4'h2;
+  parameter ADDR_CORE_VERSION = 4'h3;
   
   parameter ADDR_CLK_DIV    = 4'h8;
   parameter ADDR_CLK_DIV    = 4'h9;
@@ -287,11 +289,11 @@ module uart(
                   begin
                   end
 
-                ADDR_CORE_TYPE0:
+                ADDR_CORE_TYPE:
                   begin
                   end
 
-                ADDR_CORE_TYPE1:
+                ADDR_CORE_VERSION:
                   begin
                   end
 
