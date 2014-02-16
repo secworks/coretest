@@ -192,11 +192,10 @@ module uart(
   reg [31 : 0] tmp_read_data;
   reg          tmp_error;
 
-  reg          rx_buffer_empty;
-  reg          rx_buffer_full;
-
-  reg          tx_buffer_empty;
-  reg          tx_buffer_full;
+  reg          rx_empty;
+  reg          rx_full;
+  reg          tx_empty;
+  reg          tx_full;
 
   
   //----------------------------------------------------------------
@@ -452,6 +451,12 @@ module uart(
     begin: rx_ctr
       rx_ctr_new = 4'h00;
       rx_ctr_we  = 0;
+      rx_empty   = 0;
+
+      if (rx_ctr_reg == 4'h0)
+        begin
+          rx_buffer_empty = 1;
+        end
       
       if ((rx_ctr_inc) && (!rx_ctr_dec))
         begin
@@ -505,12 +510,18 @@ module uart(
   //----------------------------------------------------------------
   // tx_ctr
   //
-  // Counter for the receive buffer.
+  // Counter for the transmit buffer.
   //----------------------------------------------------------------
   always @*
     begin: tx_ctr
-      tx_ctr_new = 4'h00;
+      tx_ctr_new = 4'h0;
       tx_ctr_we  = 0;
+      tx_full    = 0;
+
+      if (tx_ctr_reg == 4'f)
+        begin
+          tx_full = 1;
+        end
       
       if ((tx_ctr_inc) && (!tx_ctr_dec))
         begin
@@ -523,6 +534,74 @@ module uart(
           tx_ctr_we  = 1;
         end
     end // tx_ctr
+
+
+  //----------------------------------------------------------------
+  // external_rx_engine
+  //
+  // Logic that implements the receive engine towards the externa
+  // interface. Detects incoming data, collects it, if required 
+  // checks parity and store correct data into the rx buffer.
+  //----------------------------------------------------------------
+  always @*
+    begin: external_rx_engine
+    end // external_rx_engine
+
+
+  //----------------------------------------------------------------
+  // external_tx_engine
+  //
+  // Logic that implements the transmit engine towards the external
+  // interface. When there is data in the tx buffer, the engine 
+  // transmits the data including start, stop and possible 
+  // parity bits.
+  //----------------------------------------------------------------
+  always @*
+    begin: external_tx_engine
+    end // external_tx_engine
+
+  
+  //----------------------------------------------------------------
+  // external_tx_engine
+  //
+  // Logic that implements the transmit engine towards the external
+  // interface. When there is data in the tx buffer, the engine 
+  // transmits the data including start, stop and possible 
+  // parity bits.
+  //----------------------------------------------------------------
+  always @*
+    begin: external_tx_engine
+    end // external_tx_engine
+
+
+  //----------------------------------------------------------------
+  // internal_rx_engine
+  //
+  // Logic that implements the receive engine towards the internal
+  // interface. When there is data in the rx buffer it asserts
+  // the syn flag to signal that there is data available on 
+  // rx_data. When the ack signal is asserted the syn flag is
+  // dropped and the data is considered to have been consumed and
+  // can be discarded.
+  //----------------------------------------------------------------
+  always @*
+    begin: internal_rx_engine
+    end // internal_rx_engine
+
+
+  //----------------------------------------------------------------
+  // internal_tx_engine
+  //
+  // Logic that implements the transmit engine towards the internal
+  // interface. When the tx_syn flag is asserted the engine checks
+  // if there are any room in the tx buffer. If it is, the data
+  // available at tx_data is stored in the buffer. The tx_ack
+  // is then asserted. The engine then waits for the syn flag
+  // to be dropped.
+  //----------------------------------------------------------------
+  always @*
+    begin: internal_tx_engine
+    end // internal_tx_engine
   
 endmodule // uart
 
