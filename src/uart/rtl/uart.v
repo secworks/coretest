@@ -150,13 +150,11 @@ module uart(
   reg [3 : 0] rx_rd_ptr_reg;
   reg [3 : 0] rx_rd_ptr_new;
   reg         rx_rd_ptr_we;
-  reg         rx_rd_ptr_rst;
   reg         rx_rd_ptr_inc;
 
   reg [3 : 0] rx_wr_ptr_reg;
   reg [3 : 0] rx_wr_ptr_new;
   reg         rx_wr_ptr_we;
-  reg         rx_wr_ptr_rst;
   reg         rx_wr_ptr_inc;
 
   reg [3 : 0] rx_ctr_reg;
@@ -174,13 +172,11 @@ module uart(
   reg [3 : 0] tx_rd_ptr_reg;
   reg [3 : 0] tx_rd_ptr_new;
   reg         tx_rd_ptr_we;
-  reg         tx_rd_ptr_rst;
   reg         tx_rd_ptr_inc;
 
   reg [3 : 0] tx_wr_ptr_reg;
   reg [3 : 0] tx_wr_ptr_new;
   reg         tx_wr_ptr_we;
-  reg         tx_wr_ptr_rst;
   reg         tx_wr_ptr_inc;
 
   reg [3 : 0] tx_ctr_reg;
@@ -408,10 +404,127 @@ module uart(
         begin
 
         end
-      
     end // loopback_mux
-endmodule // uart
 
+
+  //----------------------------------------------------------------
+  // rx_rd_ptr
+  //
+  // Read pointer for the receive buffer.
+  //----------------------------------------------------------------
+  always @*
+    begin: rx_rd_ptr
+      rx_rd_ptr_new = 4'h00;
+      rx_rd_ptr_we  = 0;
+
+      if (rx_rd_ptr_inc)
+        begin
+          rx_rd_ptr_new = rx_rd_ptr_reg + 1'b1;
+          rx_rd_ptr_we  = 1;
+        end
+    end // rx_rd_ptr
+
+
+  //----------------------------------------------------------------
+  // rx_wr_ptr
+  //
+  // Write pointer for the receive buffer.
+  //----------------------------------------------------------------
+  always @*
+    begin: rx_wr_ptr
+      rx_wr_ptr_new = 4'h00;
+      rx_wr_ptr_we  = 0;
+
+      if (rx_wr_ptr_inc)
+        begin
+          rx_wr_ptr_new = rx_wr_ptr_reg + 1'b1;
+          rx_wr_ptr_we  = 1;
+        end
+    end // rx_wr_ptr
+
+
+  //----------------------------------------------------------------
+  // rx_ctr
+  //
+  // Counter for the receive buffer.
+  //----------------------------------------------------------------
+  always @*
+    begin: rx_ctr
+      rx_ctr_new = 4'h00;
+      rx_ctr_we  = 0;
+      
+      if ((rx_ctr_inc) && (!rx_ctr_dec))
+        begin
+          rx_ctr_new = rx_ctr_reg + 1'b1;
+          rx_ctr_we  = 1;
+        end
+      else if ((!rx_ctr_inc) && (rx_ctr_dec))
+        begin
+          rx_ctr_new = rx_ctr_reg - 1'b1;
+          rx_ctr_we  = 1;
+        end
+    end // rx_ctr
+
+  
+  //----------------------------------------------------------------
+  // tx_rd_ptr
+  //
+  // Read pointer for the transmit buffer.
+  //----------------------------------------------------------------
+  always @*
+    begin: tx_rd_ptr
+      tx_rd_ptr_new = 4'h00;
+      tx_rd_ptr_we  = 0;
+
+      if (tx_rd_ptr_inc)
+        begin
+          tx_rd_ptr_new = tx_rd_ptr_reg + 1'b1;
+          tx_rd_ptr_we  = 1;
+        end
+    end // tx_rd_ptr
+
+
+  //----------------------------------------------------------------
+  // tx_wr_ptr
+  //
+  // Write pointer for the transmit buffer.
+  //----------------------------------------------------------------
+  always @*
+    begin: tx_wr_ptr
+      tx_wr_ptr_new = 4'h00;
+      tx_wr_ptr_we  = 0;
+
+      if (tx_wr_ptr_inc)
+        begin
+          tx_wr_ptr_new = tx_wr_ptr_reg + 1'b1;
+          tx_wr_ptr_we  = 1;
+        end
+    end // tx_wr_ptr
+
+
+  //----------------------------------------------------------------
+  // tx_ctr
+  //
+  // Counter for the receive buffer.
+  //----------------------------------------------------------------
+  always @*
+    begin: tx_ctr
+      tx_ctr_new = 4'h00;
+      tx_ctr_we  = 0;
+      
+      if ((tx_ctr_inc) && (!tx_ctr_dec))
+        begin
+          tx_ctr_new = tx_ctr_reg + 1'b1;
+          tx_ctr_we  = 1;
+        end
+      else if ((!tx_ctr_inc) && (tx_ctr_dec))
+        begin
+          tx_ctr_new = tx_ctr_reg - 1'b1;
+          tx_ctr_we  = 1;
+        end
+    end // tx_ctr
+  
+endmodule // uart
 
 //======================================================================
 // EOF uart.v
