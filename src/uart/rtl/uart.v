@@ -194,8 +194,25 @@ module uart(
   reg [7 : 0] rxd_byte_reg;
   reg [7 : 0] rxd_byte_new;
   reg         rxd_byte_we;
-  
 
+  reg [2 : 0] bit_ctr_reg;
+  reg [2 : 0] bit_ctr_new;
+  reg         bit_ctr_we;
+  reg         bit_ctr_rst;
+  reg         bit_ctr_inc;
+  
+  reg [31 : 0] rx_buffer_full_ctr_reg;
+  reg [31 : 0] rx_buffer_full_ctr_new;
+  reg          rx_buffer_full_ctr_we;
+  reg          rx_buffer_full_ctr_inc;
+  reg          rx_buffer_full_ctr_rst;
+
+  reg [31 : 0] rx_parity_error_ctr_reg;
+  reg [31 : 0] rx_parity_error_ctr_new;
+  reg          rx_parity_error_ctr_we;
+  reg          rx_parity_error_ctr_inc;
+  reg          rx_parity_error_ctr_rst;
+               
   
   //----------------------------------------------------------------
   // Wires.
@@ -212,6 +229,8 @@ module uart(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
+  assign txd = txd_reg;
+
   assign read_data = tmp_read_data;
   assign error     = tmp_error;
   
