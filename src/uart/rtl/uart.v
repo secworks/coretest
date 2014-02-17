@@ -195,11 +195,17 @@ module uart(
   reg [7 : 0] rxd_byte_new;
   reg         rxd_byte_we;
 
-  reg [2 : 0] bit_ctr_reg;
-  reg [2 : 0] bit_ctr_new;
-  reg         bit_ctr_we;
-  reg         bit_ctr_rst;
-  reg         bit_ctr_inc;
+  reg [2 : 0] rxd_bit_ctr_reg;
+  reg [2 : 0] rxd_bit_ctr_new;
+  reg         rxd_bit_ctr_we;
+  reg         rxd_bit_ctr_rst;
+  reg         rxd_bit_ctr_inc;
+  
+  reg [2 : 0] txd_bit_ctr_reg;
+  reg [2 : 0] txd_bit_ctr_new;
+  reg         txd_bit_ctr_we;
+  reg         txd_bit_ctr_rst;
+  reg         txd_bit_ctr_inc;
   
   reg [31 : 0] rx_buffer_full_ctr_reg;
   reg [31 : 0] rx_buffer_full_ctr_new;
