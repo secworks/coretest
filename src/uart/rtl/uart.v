@@ -3,14 +3,16 @@
 // uart.v
 // ------
 // A simple universal asynchronous receiver/transmitter (UART)
-// interface. The interface contains a buffers for a few bytes
-// and can handle start and stop bits. But in general is.
-// rather simple. The primary purpose is as host interface
-// for the coretest design.
+// interface. The interface contains 16 byte wide transmit and 
+// receivea buffers and can handle start and stop bits. But in 
+// general is rather simple. The primary purpose is as host 
+// interface for the coretest design. The core also has a
+// loopback mode to allow testing of a serial link.
 //
 // Note that the UART has a separate API interface to allow
-// a core to change settings such as speed. But the core
-// does not to be set up in order to start operating.
+// a control core to change settings such as speed. But the core
+// has default values to allow it to start operating directly
+// after reset. No config should be needed.
 //
 //
 // Author: Joachim Strombergson
@@ -84,9 +86,10 @@ module uart(
   parameter ADDR_CONFIG       = 4'ha; // Num start, data, stop, parity bits.
   parameter ADDR_CLK_DIV      = 4'hb; // Clock divisor to set bitrate.
 
+  // These are WTC registers. The value written is ignored.
   parameter ADDR_STAT_PARITY  = 4'hc; // Stats: Num parity errors detected.
   parameter ADDR_STAT_RX_FULL = 4'hd; // Stats: Num Rx buffer full events.
-  parameter ADDR_STAT_TC_FULL = 4'he; // Stats: Num Tx buffer full events.
+  parameter ADDR_STAT_TX_FULL = 4'he; // Stats: Num Tx buffer full events.
 
   // Core ID constants.
   parameter CORE_NAME0   = 32'h75617274;  // "uart"
@@ -200,24 +203,42 @@ module uart(
   reg         rxd_bit_ctr_we;
   reg         rxd_bit_ctr_rst;
   reg         rxd_bit_ctr_inc;
+
+  reg [15 : 0] rxd_bitrate_ctr_reg;
+  reg [15 : 0] rxd_bitrate_ctr_new;
+  reg          rxd_bitrate_ctr_we;
+  reg          rxd_bitrate_ctr_rst;
+  reg          rxd_bitrate_ctr_inc;
   
   reg [2 : 0] txd_bit_ctr_reg;
   reg [2 : 0] txd_bit_ctr_new;
   reg         txd_bit_ctr_we;
   reg         txd_bit_ctr_rst;
   reg         txd_bit_ctr_inc;
-  
-  reg [31 : 0] rx_buffer_full_ctr_reg;
-  reg [31 : 0] rx_buffer_full_ctr_new;
-  reg          rx_buffer_full_ctr_we;
-  reg          rx_buffer_full_ctr_inc;
-  reg          rx_buffer_full_ctr_rst;
+
+  reg [15 : 0] txd_bitrate_ctr_reg;
+  reg [15 : 0] txd_bitrate_ctr_new;
+  reg          txd_bitrate_ctr_we;
+  reg          txd_bitrate_ctr_rst;
+  reg          txd_bitrate_ctr_inc;
 
   reg [31 : 0] rx_parity_error_ctr_reg;
   reg [31 : 0] rx_parity_error_ctr_new;
   reg          rx_parity_error_ctr_we;
   reg          rx_parity_error_ctr_inc;
   reg          rx_parity_error_ctr_rst;
+  
+  reg [31 : 0] rx_buffer_full_ctr_reg;
+  reg [31 : 0] rx_buffer_full_ctr_new;
+  reg          rx_buffer_full_ctr_we;
+  reg          rx_buffer_full_ctr_inc;
+  reg          rx_buffer_full_ctr_rst;
+  
+  reg [31 : 0] tx_buffer_full_ctr_reg;
+  reg [31 : 0] tx_buffer_full_ctr_new;
+  reg          tx_buffer_full_ctr_we;
+  reg          tx_buffer_full_ctr_inc;
+  reg          tx_buffer_full_ctr_rst;
                
   
   //----------------------------------------------------------------
@@ -252,25 +273,34 @@ module uart(
     begin: reg_update
       if (reset)
         begin
-          clk_div_reg      <= DEFAULT_CLK_DIV;
-          start_bits_reg   <= DEFAULT_START_BITS;
-          stop_bits_reg    <= DEFAULT_STOP_BITS;
-          data_bits_reg    <= DEFAULT_DATA_BITS;
-          parity_bit_reg   <= DEFAULT_PARITY;
-          enable_bit_reg   <= DEFAULT_ENABLE;
-          loopback_bit_reg <= DEFAULT_LOOPBACK;
-
-          rxd_reg          <= 0;
-          rxd_byte_reg     <= 8'h00;
-          txd_reg          <= 0;
+          clk_div_reg             <= DEFAULT_CLK_DIV;
+          start_bits_reg          <= DEFAULT_START_BITS;
+          stop_bits_reg           <= DEFAULT_STOP_BITS;
+          data_bits_reg           <= DEFAULT_DATA_BITS;
+          parity_bit_reg          <= DEFAULT_PARITY;
+          enable_bit_reg          <= DEFAULT_ENABLE;
+          loopback_bit_reg        <= DEFAULT_LOOPBACK;
           
-          rx_rd_ptr_reg    <= 4'h0;
-          rx_wr_ptr_reg    <= 4'h0;
-          rx_ctr_reg       <= 4'h0;
-          tx_rd_ptr_reg    <= 4'h0;
-          tx_wr_ptr_reg    <= 4'h0;
-          tx_ctr_reg       <= 4'h0;
+          rxd_reg                 <= 0;
+          rxd_byte_reg            <= 8'h00;
+          txd_reg                 <= 0;
+          
+          rx_rd_ptr_reg           <= 4'h0;
+          rx_wr_ptr_reg           <= 4'h0;
+          rx_ctr_reg              <= 4'h0;
+          tx_rd_ptr_reg           <= 4'h0;
+          tx_wr_ptr_reg           <= 4'h0;
+          tx_ctr_reg              <= 4'h0;
 
+          rxd_bit_ctr_reg         <= 3'b000;
+          rxd_bitrate_ctr_reg     <= 16'h0000;
+          txd_bit_ctr_reg         <= 3'b000;
+          txd_bitrate_ctr_reg     <= 16'h0000;
+          
+          rx_parity_error_ctr_reg <= 32'h00000000;
+          rx_buffer_full_ctr_reg  <= 32'h00000000;
+          tx_buffer_full_ctr_reg  <= 32'h00000000;
+          
         end
       else
         begin
@@ -351,6 +381,42 @@ module uart(
             begin
               tx_ctr_reg <= tx_ctr_new;
             end
+
+          if (rx_parity_error_ctr_we)
+            begin
+              rx_parity_error_ctr_reg <= rx_parity_error_ctr_new;
+            end
+
+          if (rx_buffer_full_ctr_we)
+            begin
+              rx_buffer_full_ctr_reg <= rx_buffer_full_ctr_new;
+            end
+
+          if (tx_buffer_full_ctr_we)
+            begin
+              tx_buffer_full_ctr_reg <= tx_buffer_full_ctr_new;
+            end
+
+          if (rxd_bit_ctr_we)
+            begin
+              rxd_bit_ctr_reg <= rxd_bit_ctr_new;
+            end
+
+          if (rxd_bitrate_ctr_we)
+            begin
+              rxd_bitrate_ctr_reg <= rxd_bitrate_ctr_new;
+            end
+
+          if (txd_bit_ctr_we)
+            begin
+              txd_bit_ctr_reg <= txd_bit_ctr_new;
+            end
+
+          if (txd_bitrate_ctr_we)
+            begin
+              txd_bitrate_ctr_reg <= txd_bitrate_ctr_new;
+            end
+
         end
     end // reg_update
 
@@ -661,4 +727,3 @@ endmodule // uart
 //======================================================================
 // EOF uart.v
 //======================================================================
-
