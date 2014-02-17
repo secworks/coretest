@@ -185,6 +185,17 @@ module uart(
   reg         tx_ctr_inc;
   reg         tx_ctr_dec;
   
+  reg         rx_reg;
+
+  reg         tx_reg;
+  reg         tx_new;
+  reg         tx_we;
+
+  reg [7 : 0] rx_byte_reg;
+  reg [7 : 0] rx_byte_new;
+  reg         rc_byte_we;
+  
+
   
   //----------------------------------------------------------------
   // Wires.
@@ -223,6 +234,10 @@ module uart(
           parity_bit_reg   <= DEFAULT_PARITY;
           enable_bit_reg   <= DEFAULT_ENABLE;
           loopback_bit_reg <= DEFAULT_LOOPBACK;
+
+          rx_reg           <= 0;
+          rx_byte_reg      <= 8'h00;
+          tx_reg           <= 0;
           
           rx_rd_ptr_reg    <= 4'h0;
           rx_wr_ptr_reg    <= 4'h0;
@@ -234,6 +249,9 @@ module uart(
         end
       else
         begin
+          // We sample the rx input port every cycle.
+          rx_reg <= rxd;
+                    
           if (clk_div_we)
             begin
               clk_div_reg <= clk_div_new;
@@ -269,6 +287,16 @@ module uart(
               loopback_bit_reg <= loopback_bit_new;
             end
 
+          if (rx_byte_we)
+            begin
+              rx_byte_reg <= rx_byte_new;
+            end
+
+          if (tx_we)
+            begin
+              tx_reg <= tx_new;
+            end
+          
           if (rx_rd_ptr_we)
             begin
               rx_rd_ptr_reg <= rx_rd_ptr_new;
