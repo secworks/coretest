@@ -81,7 +81,7 @@ module uart(
   parameter ADDR_CORE_TYPE    = 4'h2;
   parameter ADDR_CORE_VERSION = 4'h3;
   
-  parameter ADDR_CRTL         = 4'h8; // Enable/disable. Loopback on/off.
+  parameter ADDR_CTRL         = 4'h8; // Enable/disable. Loopback on/off.
   parameter ADDR_STATUS       = 4'h9; // Buffer status.
   parameter ADDR_CONFIG       = 4'ha; // Num start, data, stop, parity bits.
   parameter ADDR_CLK_DIV      = 4'hb; // Clock divisor to set bitrate.
@@ -430,40 +430,76 @@ module uart(
   always @*
     begin: api
       // Default assignments.
-      tmp_read_data = 32'h00000000;
-      tmp_error     = 0;
+      tmp_read_data           = 32'h00000000;
+      tmp_error               = 0;
+      clk_div_new             = 16'h0000;
+      clk_div_we              = 0;
+      enable_bit_new          = 0;
+      enable_bit_we           = 0;
+      loopback_bit_new        = 0;
+      loopback_bit_we         = 0;
+      start_bits_new          = 2'b00;
+      start_bits_we           = 0;
+      stop_bits_new           = 2'b00 ;
+      stop_bits_we            = 0;
+      data_bits_new           = 4'h0;
+      data_bits_we            = 0;
+      parity_bit_new          = 0;
+      parity_bit_we           = 0;
+      rx_parity_error_ctr_rst = 0;
+      rx_buffer_full_ctr_rst  = 0;
+      tx_buffer_full_ctr_rst  = 0;
       
-      clk_div_new   = 16'h0000;
-      clk_div_we    = 0;
-
       if (cs)
         begin
           if (we)
             begin
               // Write operations.
               case (address)
-                ADDR_CORE_NAME0:
+                ADDR_CTRL:
                   begin
+                    enable_bit_new   = write_data[0];
+                    enable_bit_we    = 1;
+                    loopback_bit_new = write_data[1];
+                    loopback_bit_we  = 1;
                   end
 
-                ADDR_CORE_NAME1:
+                ADDR_CONFIG:
                   begin
+                    start_bits_new = write_data[1 : 0];
+                    start_bits_we  = 1;
+                    stop_bits_new  = write_data[3 : 2];
+                    stop_bits_we   = 1;
+                    data_bits_new  = write_data[7 : 4];
+                    data_bits_we   = 1;
+                    parity_bit_new = write_data[8];
+                    parity_bit_we  = 1;
                   end
-
-                ADDR_CORE_TYPE0:
-                  begin
-                  end
-
-                ADDR_CORE_TYPE1:
-                  begin
-                  end
-
+                
                 ADDR_CLK_DIV:
                   begin
                     clk_div_new = write_data[15 : 0];
                     clk_div_we  = 1;
                   end
 
+                ADDR_STAT_PARITY:
+                  begin
+                    // Note that we ignore the data being written.
+                    rx_parity_error_ctr_rst = 1;
+                  end
+
+                ADDR_STAT_RX_FULL:
+                  begin
+                    // Note that we ignore the data being written.
+                    rx_buffer_full_ctr_rst = 1;
+                  end
+
+                ADDR_STAT_TX_FULL:
+                  begin
+                    // Note that we ignore the data being written.
+                    tx_buffer_full_ctr_rst = 1;
+                  end
+                
                 default:
                   begin
                     tmp_error = 1;
@@ -476,25 +512,62 @@ module uart(
               case (address)
                 ADDR_CORE_NAME0:
                   begin
+                    tmp_read_data = CORE_NAME0;
                   end
 
                 ADDR_CORE_NAME1:
                   begin
+                    tmp_read_data = CORE_NAME1;
                   end
 
                 ADDR_CORE_TYPE:
                   begin
+                    tmp_read_data = CORE_TYPE;
                   end
 
                 ADDR_CORE_VERSION:
                   begin
+                    tmp_read_data = CORE_VERSION;
                   end
 
+                ADDR_CTRL:
+                  begin
+                    tmp_read_data = {28'h0000000, 2'b00, 
+                                     loopback_bit_reg, enable_bit_reg};
+                  end
+                
+                ADDR_STATUS:
+                  begin
+                    tmp_read_data = {24'h000000, tx_ctr_reg, rx_ctr_reg};
+                  end
+                
+                ADDR_CONFIG:
+                  begin
+                    tmp_read_data = {20'h00000, 3'b000, 
+                                     parity_bit_reg, data_bits_reg,
+                                     stop_bits_reg, start_bits_reg};
+                  end
+                
                 ADDR_CLK_DIV:
                   begin
                     tmp_read_data = {16'h0000, clk_div_reg};
                   end
 
+                ADDR_STAT_PARITY:
+                  begin
+                    tmp_read_data = rx_parity_error_ctr_reg;
+                  end
+                
+                ADDR_STAT_RX_FULL:
+                  begin
+                    tmp_read_data = rx_buffer_full_ctr_reg;
+                  end
+                
+                ADDR_STAT_TX_FULL:
+                  begin
+                    tmp_read_data = tx_buffer_full_ctr_reg;
+                  end
+                
                 default:
                   begin
                     tmp_error = 1;
