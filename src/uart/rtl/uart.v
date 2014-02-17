@@ -185,15 +185,15 @@ module uart(
   reg         tx_ctr_inc;
   reg         tx_ctr_dec;
   
-  reg         rx_reg;
+  reg         rxd_reg;
 
-  reg         tx_reg;
-  reg         tx_new;
-  reg         tx_we;
+  reg         txd_reg;
+  reg         txd_new;
+  reg         txd_we;
 
-  reg [7 : 0] rx_byte_reg;
-  reg [7 : 0] rx_byte_new;
-  reg         rc_byte_we;
+  reg [7 : 0] rxd_byte_reg;
+  reg [7 : 0] rxd_byte_new;
+  reg         rxd_byte_we;
   
 
   
@@ -235,9 +235,9 @@ module uart(
           enable_bit_reg   <= DEFAULT_ENABLE;
           loopback_bit_reg <= DEFAULT_LOOPBACK;
 
-          rx_reg           <= 0;
-          rx_byte_reg      <= 8'h00;
-          tx_reg           <= 0;
+          rxd_reg          <= 0;
+          rxd_byte_reg     <= 8'h00;
+          txd_reg          <= 0;
           
           rx_rd_ptr_reg    <= 4'h0;
           rx_wr_ptr_reg    <= 4'h0;
@@ -250,7 +250,17 @@ module uart(
       else
         begin
           // We sample the rx input port every cycle.
-          rx_reg <= rxd;
+          rxd_reg <= rxd;
+
+          if (rxd_byte_we)
+            begin
+              rxd_byte_reg <= {rxd_byte_reg[6 : 1], rxd_reg};
+            end
+
+          if (txd_we)
+            begin
+              txd_reg <= txd_new;
+            end
                     
           if (clk_div_we)
             begin
@@ -285,16 +295,6 @@ module uart(
           if (loopback_bit_we)
             begin
               loopback_bit_reg <= loopback_bit_new;
-            end
-
-          if (rx_byte_we)
-            begin
-              rx_byte_reg <= rx_byte_new;
-            end
-
-          if (tx_we)
-            begin
-              tx_reg <= tx_new;
             end
           
           if (rx_rd_ptr_we)
