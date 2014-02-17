@@ -115,6 +115,13 @@ module uart(
   parameter ITX_IDLE = 0;
   parameter ITX_ACK  = 1;
   
+  parameter ETX_IDLE   = 0;
+  parameter ETX_START  = 1;
+  parameter ETX_DATA   = 2;
+  parameter ETX_PARITY = 3;
+  parameter ETX_STOP   = 4;
+  parameter ETX_DONE   = 5;
+  
   
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -252,6 +259,10 @@ module uart(
   reg          itx_ctrl_reg;
   reg          itx_ctrl_new;
   reg          itx_ctrl_we;
+               
+  reg [2 : 0]  etx_ctrl_reg;
+  reg [2 : 0]  etx_ctrl_new;
+  reg          etx_ctrl_we;
   
   
   //----------------------------------------------------------------
@@ -319,6 +330,7 @@ module uart(
           tx_buffer_full_ctr_reg  <= 32'h00000000;
 
           itx_ctrl_reg            <= ITX_IDLE;
+          etx_ctrl_reg            <= ETX_IDLE;
         end
       else
         begin
@@ -453,6 +465,11 @@ module uart(
           if (itx_ctrl_we)
             begin
               itx_ctrl_reg <= itx_ctrl_new;
+            end
+
+          if (etx_ctrl_we)
+            begin
+              etx_ctrl_reg <= etx_ctrl_new;
             end
         end
     end // reg_update
