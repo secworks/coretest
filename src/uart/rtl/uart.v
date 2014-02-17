@@ -195,13 +195,17 @@ module uart(
   
   reg         rxd_reg;
 
+  reg [7 : 0] rxd_byte_reg;
+  reg [7 : 0] rxd_byte_new;
+  reg         rxd_byte_we;
+
   reg         txd_reg;
   reg         txd_new;
   reg         txd_we;
 
-  reg [7 : 0] rxd_byte_reg;
-  reg [7 : 0] rxd_byte_new;
-  reg         rxd_byte_we;
+  reg [7 : 0] txd_byte_reg;
+  reg [7 : 0] txd_byte_new;
+  reg         txd_byte_we;
 
   reg [2 : 0] rxd_bit_ctr_reg;
   reg [2 : 0] rxd_bit_ctr_new;
@@ -296,6 +300,7 @@ module uart(
           rxd_reg                 <= 0;
           rxd_byte_reg            <= 8'h00;
           txd_reg                 <= 0;
+          txd_byte_reg            <= 8'h00;
           
           rx_rd_ptr_reg           <= 4'h0;
           rx_wr_ptr_reg           <= 4'h0;
@@ -328,6 +333,11 @@ module uart(
           if (txd_we)
             begin
               txd_reg <= txd_new;
+            end
+
+          if (txd_byte_we)
+            begin
+              txd_byte_reg <= tx_buffer[tx_rd_ptr_reg];
             end
                     
           if (clk_div_we)
@@ -790,6 +800,33 @@ module uart(
   //----------------------------------------------------------------
   always @*
     begin: external_tx_engine
+      tx_rd_ptr_inc       = 0;
+      tx_ctr_dec          = 0;
+      txd_byte_we         = 0;
+      txd_we              = 0;
+      txd_bit_ctr_rst     = 0;
+      txd_bit_ctr_inc     = 0;
+      txd_bitrate_ctr_rst = 0;
+      txd_bitrate_ctr_inc = 0;
+      etx_ctrl_new        = ETX_IDLE;
+      etx_ctrl_we         = 0;
+      
+      case (etx_ctrl_reg)
+        ETX_IDLE:
+          begin
+            if (!tx_empty)
+              begin
+                txd_byte_we         = 1;
+                txd_bit_ctr_rst     = 1;
+                txd_bitrate_ctr_rst = 1;
+                tx_rd_ptr_inc       = 1;
+                tx_ctr_dec          = 1;
+                etx_ctrl_new        = ETX_START;
+                etx_ctrl_we         = 1;
+              end
+          end
+
+      endcase // case (etx_ctrl_reg)
     end // external_tx_engine
 
 
