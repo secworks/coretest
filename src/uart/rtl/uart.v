@@ -112,6 +112,9 @@ module uart(
   parameter DEFAULT_ENABLE     = 1'h1;
   parameter DEFAULT_LOOPBACK   = 1'h0;
   
+  parameter ITX_IDLE = 0;
+  parameter ITX_ACK  = 1;
+  
   
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -149,7 +152,8 @@ module uart(
   // as counter for number of elements
   // in the buffer.
   reg [7 : 0] rx_buffer [0 : 15];
-
+  reg         rx_buffer_we;
+  
   reg [3 : 0] rx_rd_ptr_reg;
   reg [3 : 0] rx_rd_ptr_new;
   reg         rx_rd_ptr_we;
@@ -241,13 +245,18 @@ module uart(
   reg          tx_buffer_full_ctr_inc;
   reg          tx_buffer_full_ctr_rst;
                
+  reg          itx_ctrl_reg;
+  reg          itx_ctrl_new;
+  reg          itx_ctrl_we;
+  
   
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
   reg [31 : 0] tmp_read_data;
   reg          tmp_error;
-
+  reg          tmp_tx_ack;
+  
   reg          rx_empty;
   reg          rx_full;
   reg          tx_empty;
@@ -259,6 +268,8 @@ module uart(
   //----------------------------------------------------------------
   assign txd = txd_reg;
 
+  assign tx_ack = tmp_tx_ack;
+  
   assign read_data = tmp_read_data;
   assign error     = tmp_error;
   
@@ -301,7 +312,8 @@ module uart(
           rx_parity_error_ctr_reg <= 32'h00000000;
           rx_buffer_full_ctr_reg  <= 32'h00000000;
           tx_buffer_full_ctr_reg  <= 32'h00000000;
-          
+
+          itx_ctrl_reg            <= ITX_IDLE;
         end
       else
         begin
@@ -351,6 +363,16 @@ module uart(
           if (loopback_bit_we)
             begin
               loopback_bit_reg <= loopback_bit_new;
+            end
+
+          if (rx_buffer_we)
+            begin
+              rx_buffer[rx_wr_ptr_reg] <= rxd_byte_reg;
+            end
+
+          if (tx_buffer_we)
+            begin
+              tx_buffer[tx_wr_ptr_reg] <= tx_data;
             end
           
           if (rx_rd_ptr_we)
@@ -418,6 +440,10 @@ module uart(
               txd_bitrate_ctr_reg <= txd_bitrate_ctr_new;
             end
 
+          if (itx_ctrl_we)
+            begin
+              itx_ctrl_reg <= itx_ctrl_new;
+            end
         end
     end // reg_update
 
@@ -798,9 +824,9 @@ module uart(
       tx_buffer_we  = 0;
       tx_wr_ptr_inc = 0;
       tx_ctr_dec    = 0;
-      itx_state_new = ITX_IDLE;
-      itx_state_we  = 0;
       tmp_tx_ack    = 0;
+      itx_ctrl_new  = ITX_IDLE;
+      itx_ctrl_we   = 0;
       
       case (itx_ctrl_reg)
         ITX_IDLE:
@@ -811,8 +837,8 @@ module uart(
                   begin
                     tx_buffer_we  = 1;
                     tx_wr_ptr_inc = 1;
-                    itx_state_new = ITX_ACK;
-                    itx_state_we  = 1;
+                    itx_ctrl_new  = ITX_ACK;
+                    itx_ctrl_we   = 1;
                   end
               end
           end
@@ -822,13 +848,11 @@ module uart(
             tmp_tx_ack = 1;
             if (!tx_syn)
               begin
-                itx_state_new = ITX_IDLE;
-                itx_state_we  = 1;
+                itx_ctrl_new = ITX_IDLE;
+                itx_ctrl_we  = 1;
               end
           end
       endcase // case (itx_ctrl_reg)
-      
-      
     end // internal_tx_engine
   
 endmodule // uart
