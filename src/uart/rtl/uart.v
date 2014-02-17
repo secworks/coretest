@@ -171,6 +171,7 @@ module uart(
   // as counter for number of elements
   // in the buffer.
   reg [7 : 0] tx_buffer [0 : 15];
+  reg         tx_buffer_we;
 
   reg [3 : 0] tx_rd_ptr_reg;
   reg [3 : 0] tx_rd_ptr_new;
@@ -793,6 +794,41 @@ module uart(
   //----------------------------------------------------------------
   always @*
     begin: internal_tx_engine
+      // Default assignments
+      tx_buffer_we  = 0;
+      tx_wr_ptr_inc = 0;
+      tx_ctr_dec    = 0;
+      itx_state_new = ITX_IDLE;
+      itx_state_we  = 0;
+      tmp_tx_ack    = 0;
+      
+      case (itx_ctrl_reg)
+        ITX_IDLE:
+          begin
+            if (tx_syn)
+              begin
+                if (!tx_full)
+                  begin
+                    tx_buffer_we  = 1;
+                    tx_wr_ptr_inc = 1;
+                    itx_state_new = ITX_ACK;
+                    itx_state_we  = 1;
+                  end
+              end
+          end
+
+        ITX_ACK:
+          begin
+            tmp_tx_ack = 1;
+            if (!tx_syn)
+              begin
+                itx_state_new = ITX_IDLE;
+                itx_state_we  = 1;
+              end
+          end
+      endcase // case (itx_ctrl_reg)
+      
+      
     end // internal_tx_engine
   
 endmodule // uart
