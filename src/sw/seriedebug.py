@@ -90,7 +90,7 @@ def main():
 
     
     if verbose:
-        print "Waiting for resoponse"
+        print "Waiting for response..."
 
     response = ""
     while not len(response):
