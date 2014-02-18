@@ -61,6 +61,9 @@ module uart(
             input wire           tx_syn,
             input wire [7 : 0]   tx_data,
             output wire          tx_ack,
+
+            // Debug
+            output wire [7 : 0]  debug_out,
             
             // API interface
             input wire           cs,
@@ -110,7 +113,8 @@ module uart(
   parameter DEFAULT_DATA_BITS  = 4'h08;
   parameter DEFAULT_PARITY     = 1'h0;
   parameter DEFAULT_ENABLE     = 1'h1;
-  parameter DEFAULT_LOOPBACK   = 1'h0;
+  parameter DEFAULT_ILOOPBACK  = 1'h0;
+  parameter DEFAULT_ELOOPBACK  = 1'h0;
   
   parameter ITX_IDLE = 0;
   parameter ITX_ACK  = 1;
@@ -134,9 +138,13 @@ module uart(
   reg          enable_bit_new;
   reg          enable_bit_we;
   
-  reg          loopback_bit_reg;
-  reg          loopback_bit_new;
-  reg          loopback_bit_we;
+  reg          iloopback_bit_reg;
+  reg          iloopback_bit_new;
+  reg          iloopback_bit_we;
+  
+  reg          eloopback_bit_reg;
+  reg          eloopback_bit_new;
+  reg          eloopback_bit_we;
   
   reg [1 : 0]  start_bits_reg;
   reg [1 : 0]  start_bits_new;
@@ -270,7 +278,20 @@ module uart(
   //----------------------------------------------------------------
   reg [31 : 0] tmp_read_data;
   reg          tmp_error;
+
+  reg          muxed_txd;
+  reg          muxed_rxd_reg;
+
+  reg          tmp_rx_syn;
+  reg []7 : 0] tmp_rx_data;
   reg          tmp_tx_ack;
+  
+  reg          internal_rx_syn;
+  reg [7 : 0]  internal_rx_data;
+  reg          internal_rx_ack;
+  reg          internal_tx_syn;
+  reg [7 : 0]  internal_tx_data;
+  reg          internal_tx_ack;
   
   reg          rx_empty;
   reg          rx_full;
@@ -281,12 +302,16 @@ module uart(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign txd = txd_reg;
+  assign txd = muxed_txd;
 
-  assign tx_ack = tmp_tx_ack;
+  assign rx_syn  = tmp_rx_syn;
+  assign rx_data = tmp_rx_data;
+  assign tx_ack  = tmp_tx_ack;
   
   assign read_data = tmp_read_data;
   assign error     = tmp_error;
+
+  assign debug_port[0] = rxd_reg;
   
   
   //----------------------------------------------------------------
@@ -306,7 +331,8 @@ module uart(
           data_bits_reg           <= DEFAULT_DATA_BITS;
           parity_bit_reg          <= DEFAULT_PARITY;
           enable_bit_reg          <= DEFAULT_ENABLE;
-          loopback_bit_reg        <= DEFAULT_LOOPBACK;
+          iloopback_bit_reg       <= DEFAULT_iLOOPBACK;
+          eloopback_bit_reg       <= DEFAULT_eLOOPBACK;
           
           rxd_reg                 <= 0;
           rxd_byte_reg            <= 8'h00;
@@ -382,9 +408,14 @@ module uart(
               enable_bit_reg <= enable_bit_new;
             end
 
-          if (loopback_bit_we)
+          if (iloopback_bit_we)
             begin
-              loopback_bit_reg <= loopback_bit_new;
+              iloopback_bit_reg <= iloopback_bit_new;
+            end
+
+          if (eloopback_bit_we)
+            begin
+              eloopback_bit_reg <= eloopback_bit_new;
             end
 
           if (rx_buffer_we)
@@ -490,8 +521,10 @@ module uart(
       clk_div_we              = 0;
       enable_bit_new          = 0;
       enable_bit_we           = 0;
-      loopback_bit_new        = 0;
-      loopback_bit_we         = 0;
+      iloopback_bit_new       = 0;
+      iloopback_bit_we        = 0;
+      eloopback_bit_new       = 0;
+      eloopback_bit_we        = 0;
       start_bits_new          = 2'b00;
       start_bits_we           = 0;
       stop_bits_new           = 2'b00 ;
@@ -514,8 +547,10 @@ module uart(
                   begin
                     enable_bit_new   = write_data[0];
                     enable_bit_we    = 1;
-                    loopback_bit_new = write_data[1];
-                    loopback_bit_we  = 1;
+                    iloopback_bit_new = write_data[1];
+                    iloopback_bit_we  = 1;
+                    eloopback_bit_new = write_data[2];
+                    eloopback_bit_we  = 1;
                   end
 
                 ADDR_CONFIG:
@@ -586,8 +621,8 @@ module uart(
 
                 ADDR_CTRL:
                   begin
-                    tmp_read_data = {28'h0000000, 2'b00, 
-                                     loopback_bit_reg, enable_bit_reg};
+                    tmp_read_data = {28'h0000000, 2'b01, eloopback_bit_reg,
+                                     iloopback_bit_reg, enable_bit_reg};
                   end
                 
                 ADDR_STATUS:
@@ -633,23 +668,59 @@ module uart(
 
   
   //----------------------------------------------------------------
-  // loopback_mux
+  // eloopback_mux
   //
-  // The mux controlled by the loopback_bit_reg. If set the
-  // interfaces towards the internal system is tied together
-  // making the UART echoing received back to the external host.
+  // The mux controlled by the eloopback_bit_reg. If set the
+  // interfaces towards the external system is tied together
+  // making the UART echoing received data back to 
+  // the external host.
   //----------------------------------------------------------------
   always @*
-    begin: loopback_mux
-      if (loopback_bit_reg)
+    begin: eloopback_mux
+      if (eloopback_bit_reg)
         begin
-          
+          muxed_rxd_reg = 8'ff;
+          muxed_txd     = rxd_reg;
         end
       else
         begin
-
+          muxed_rxd_reg = rxd_reg;
+          muxed_txd = txd_reg;
         end
-    end // loopback_mux
+    end // eloopback_mux
+
+  
+  //----------------------------------------------------------------
+  // iloopback_mux
+  //
+  // The mux controlled by the iloopback_bit_reg. If set the
+  // interfaces towards the internal system is tied together
+  // making the UART echoing received back to the external host 
+  // via the buffers and serial/parallel conversions
+  //----------------------------------------------------------------
+  always @*
+    begin: iloopback_mux
+      if (iloopback_bit_reg)
+        begin
+          internal_tx_syn  = internal_rx_syn;
+          internal_tx_data = internal_rx_data;
+          internal_rx_ack  = internal_tx_ack;
+
+          tmp_rx_syn  = 0;
+          tmp_rx_data = 8'h00;
+          tmp_tx_ack  = 0;
+        end
+      else
+        begin
+          tmp_rx_syn       = internal_rx_syn;
+          tmp_rx_data      = internal_rx_data;
+          internal_rx_ack  = rx_ack;
+
+          internal_xx_syn  = tx_syn;
+          internal_tx_data = tx_data;
+          tmp_tx_ack       = internal_tx_ack;
+        end
+    end // iloopback_mux
 
 
   //----------------------------------------------------------------
