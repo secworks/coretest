@@ -47,7 +47,7 @@
 
 module uart(
             input wire           clk,
-            input wire           reset,
+            input wire           reset_n,
 
             // External interface
             input wire           rxd,
@@ -56,14 +56,14 @@ module uart(
             // Internal interface
             output wire          rx_syn,
             output wire [7 : 0]  rx_data,
-            intput wire          rx_ack,
+            input wire           rx_ack,
 
             input wire           tx_syn,
             input wire [7 : 0]   tx_data,
             output wire          tx_ack,
 
             // Debug
-            output wire [7 : 0]  debug_out,
+            output wire [7 : 0]  debug,
             
             // API interface
             input wire           cs,
@@ -73,7 +73,7 @@ module uart(
             output wire [31 : 0] read_data,
             output wire          error
            );
-
+  
   
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
@@ -99,18 +99,19 @@ module uart(
   parameter CORE_NAME1   = 32'h20202020;  // "    "
   parameter CORE_TYPE    = 32'h20202031;  // "   1"
   parameter CORE_VERSION = 32'h302e3031;  // "0.01"
-  
+
   // The default clock rate is based on target clock frequency
   // divided by the bit rate times in order to hit the
   // center of the bits. I.e.
   // Clock: 50 MHz
-  // Bitrate: 115200 bps
-  // Divisor = 50*10E6 / (19200 * 4) = 651.041666
-  parameter DEFAULT_CLK_DIV = 651;
+  // Bitrate: 1200 bps
+  // Divisor = 5010E6 / (19200 * 4) = 651.041666
+  // Divisor = 50E6 / (1200 * 4) = 10416.6667 
+  parameter DEFAULT_CLK_DIV = 10417;
 
   parameter DEFAULT_START_BITS = 2'h1;
   parameter DEFAULT_STOP_BITS  = 2'h1;
-  parameter DEFAULT_DATA_BITS  = 4'h08;
+  parameter DEFAULT_DATA_BITS  = 4'h8;
   parameter DEFAULT_PARITY     = 1'h0;
   parameter DEFAULT_ENABLE     = 1'h1;
   parameter DEFAULT_ILOOPBACK  = 1'h0;
@@ -283,7 +284,7 @@ module uart(
   reg          muxed_rxd_reg;
 
   reg          tmp_rx_syn;
-  reg []7 : 0] tmp_rx_data;
+  reg [7 : 0]  tmp_rx_data;
   reg          tmp_tx_ack;
   
   reg          internal_rx_syn;
@@ -310,9 +311,10 @@ module uart(
   
   assign read_data = tmp_read_data;
   assign error     = tmp_error;
-
-  assign debug_port[0] = rxd_reg;
   
+  assign debug = {rxd_reg, rxd_reg, rxd_reg, rxd_reg, 
+                  rxd_reg, rxd_reg, rxd_reg, rxd_reg};
+
   
   //----------------------------------------------------------------
   // reg_update
@@ -323,7 +325,7 @@ module uart(
   //----------------------------------------------------------------
   always @ (posedge clk)
     begin: reg_update
-      if (reset)
+      if (!reset_n)
         begin
           clk_div_reg             <= DEFAULT_CLK_DIV;
           start_bits_reg          <= DEFAULT_START_BITS;
@@ -331,8 +333,8 @@ module uart(
           data_bits_reg           <= DEFAULT_DATA_BITS;
           parity_bit_reg          <= DEFAULT_PARITY;
           enable_bit_reg          <= DEFAULT_ENABLE;
-          iloopback_bit_reg       <= DEFAULT_iLOOPBACK;
-          eloopback_bit_reg       <= DEFAULT_eLOOPBACK;
+          iloopback_bit_reg       <= DEFAULT_ILOOPBACK;
+          eloopback_bit_reg       <= DEFAULT_ELOOPBACK;
           
           rxd_reg                 <= 0;
           rxd_byte_reg            <= 8'h00;
@@ -362,7 +364,7 @@ module uart(
         begin
           // We sample the rx input port every cycle.
           rxd_reg <= rxd;
-
+          
           if (rxd_byte_we)
             begin
               rxd_byte_reg <= {rxd_byte_reg[6 : 1], rxd_reg};
@@ -506,12 +508,12 @@ module uart(
     end // reg_update
 
 
-  //----------------------------------------------------------------
-  // api
-  //
-  // The core API that allows an internal host to control the
-  // core functionality.
-  //----------------------------------------------------------------
+//----------------------------------------------------------------
+// api
+//
+// The core API that allows an internal host to control the
+// core functionality.
+//----------------------------------------------------------------
   always @*
     begin: api
       // Default assignments.
@@ -679,7 +681,7 @@ module uart(
     begin: eloopback_mux
       if (eloopback_bit_reg)
         begin
-          muxed_rxd_reg = 8'ff;
+          muxed_rxd_reg = 8'hff;
           muxed_txd     = rxd_reg;
         end
       else
@@ -698,30 +700,30 @@ module uart(
   // making the UART echoing received back to the external host 
   // via the buffers and serial/parallel conversions
   //----------------------------------------------------------------
-  always @*
-    begin: iloopback_mux
-      if (iloopback_bit_reg)
-        begin
-          internal_tx_syn  = internal_rx_syn;
-          internal_tx_data = internal_rx_data;
-          internal_rx_ack  = internal_tx_ack;
-
-          tmp_rx_syn  = 0;
-          tmp_rx_data = 8'h00;
-          tmp_tx_ack  = 0;
-        end
-      else
-        begin
-          tmp_rx_syn       = internal_rx_syn;
-          tmp_rx_data      = internal_rx_data;
-          internal_rx_ack  = rx_ack;
-
-          internal_xx_syn  = tx_syn;
-          internal_tx_data = tx_data;
-          tmp_tx_ack       = internal_tx_ack;
-        end
-    end // iloopback_mux
-
+//  always @*
+//    begin: iloopback_mux
+//      if (iloopback_bit_reg)
+//        begin
+//          internal_tx_syn  = internal_rx_syn;
+//          internal_tx_data = internal_rx_data;
+//          internal_rx_ack  = internal_tx_ack;
+//
+//          tmp_rx_syn  = 0;
+//          tmp_rx_data = 8'h00;
+//          tmp_tx_ack  = 0;
+//        end
+//      else
+//        begin
+//          tmp_rx_syn       = internal_rx_syn;
+//          tmp_rx_data      = internal_rx_data;
+//          internal_rx_ack  = rx_ack;
+//
+//          internal_xx_syn  = tx_syn;
+//          internal_tx_data = tx_data;
+//          tmp_tx_ack       = internal_tx_ack;
+//        end
+//    end // iloopback_mux
+//
 
   //----------------------------------------------------------------
   // rx_rd_ptr
@@ -772,7 +774,7 @@ module uart(
 
       if (rx_ctr_reg == 4'h0)
         begin
-          rx_buffer_empty = 1;
+          rx_empty = 1;
         end
       
       if ((rx_ctr_inc) && (!rx_ctr_dec))
@@ -835,7 +837,7 @@ module uart(
       tx_ctr_we  = 0;
       tx_full    = 0;
 
-      if (tx_ctr_reg == 4'f)
+      if (tx_ctr_reg == 4'hf)
         begin
           tx_full = 1;
         end
@@ -862,20 +864,9 @@ module uart(
   //----------------------------------------------------------------
   always @*
     begin: external_rx_engine
+      
+
     end // external_rx_engine
-
-
-  //----------------------------------------------------------------
-  // external_tx_engine
-  //
-  // Logic that implements the transmit engine towards the external
-  // interface. When there is data in the tx buffer, the engine 
-  // transmits the data including start, stop and possible 
-  // parity bits.
-  //----------------------------------------------------------------
-  always @*
-    begin: external_tx_engine
-    end // external_tx_engine
 
   
   //----------------------------------------------------------------
@@ -948,7 +939,7 @@ module uart(
       // Default assignments
       tx_buffer_we  = 0;
       tx_wr_ptr_inc = 0;
-      tx_ctr_dec    = 0;
+      tx_ctr_inc    = 0;
       tmp_tx_ack    = 0;
       itx_ctrl_new  = ITX_IDLE;
       itx_ctrl_we   = 0;
@@ -962,6 +953,7 @@ module uart(
                   begin
                     tx_buffer_we  = 1;
                     tx_wr_ptr_inc = 1;
+                    tx_ctr_inc    = 1;
                     itx_ctrl_new  = ITX_ACK;
                     itx_ctrl_we   = 1;
                   end
