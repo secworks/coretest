@@ -273,6 +273,23 @@ module tb_coretest();
   //----------------------------------------------------------------
   // send_write_command
   //
+  // Generates a read command to the dut.
+  //----------------------------------------------------------------
+  task send_read_command(input [15 : 0] addr);
+    begin
+      $display("*** Sending read command: address 0x%04x.", addr);
+      send_byte(SOF);
+      send_byte(OP_READ);
+      send_byte(addr[15 : 8]);
+      send_byte(addr[7 : 0]);
+      send_byte(EOF);
+    end
+  endtask // send_write_command
+
+  
+  //----------------------------------------------------------------
+  // send_write_command
+  //
   // Generates a write command to the dut.
   //----------------------------------------------------------------
   task send_write_command(input [15 : 0] addr, input [31 : 0] data);
@@ -324,6 +341,9 @@ module tb_coretest();
       dump_dut_state();
 
       send_reset_command();
+      dump_dut_state();
+
+      send_read_command(16'h0123);
       dump_dut_state();
 
       send_write_command(16'h4224, 32'h1337beef);
