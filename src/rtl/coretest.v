@@ -239,38 +239,39 @@ module coretest(
     begin: reg_update
       if (!reset_n)
         begin
-          rx_buffer[0]       <= 8'h00;
-          rx_buffer[1]       <= 8'h00;
-          rx_buffer[2]       <= 8'h00;
-          rx_buffer[3]       <= 8'h00;
-          rx_buffer[4]       <= 8'h00;
-          rx_buffer[5]       <= 8'h00;
-          rx_buffer[6]       <= 8'h00;
-          rx_buffer[7]       <= 8'h00;
-          rx_buffer[8]       <= 8'h00;
+          rx_buffer[0]        <= 8'h00;
+          rx_buffer[1]        <= 8'h00;
+          rx_buffer[2]        <= 8'h00;
+          rx_buffer[3]        <= 8'h00;
+          rx_buffer[4]        <= 8'h00;
+          rx_buffer[5]        <= 8'h00;
+          rx_buffer[6]        <= 8'h00;
+          rx_buffer[7]        <= 8'h00;
+          rx_buffer[8]        <= 8'h00;
           
-          tx_buffer[0]       <= 8'h00;
-          tx_buffer[1]       <= 8'h00;
-          tx_buffer[2]       <= 8'h00;
-          tx_buffer[3]       <= 8'h00;
-          tx_buffer[4]       <= 8'h00;
-          tx_buffer[5]       <= 8'h00;
-          tx_buffer[6]       <= 8'h00;
-          tx_buffer[7]       <= 8'h00;
-          tx_buffer[8]       <= 8'h00;
+          tx_buffer[0]        <= 8'h00;
+          tx_buffer[1]        <= 8'h00;
+          tx_buffer[2]        <= 8'h00;
+          tx_buffer[3]        <= 8'h00;
+          tx_buffer[4]        <= 8'h00;
+          tx_buffer[5]        <= 8'h00;
+          tx_buffer[6]        <= 8'h00;
+          tx_buffer[7]        <= 8'h00;
+          tx_buffer[8]        <= 8'h00;
 
-          rx_buffer_ptr_reg  <= 4'h0;
-          tx_buffer_ptr_reg  <= 4'h0;
+          rx_buffer_ptr_reg   <= 4'h0;
+          tx_buffer_ptr_reg   <= 4'h0;
 
-          core_reset_reg     <= 1;
-          core_cs_reg        <= 0;
-          core_we_reg        <= 0;
-          core_error_reg     <= 0;
-          core_read_data_reg <= 32'h00000000;
+          core_reset_reg      <= 1;
+          core_cs_reg         <= 0;
+          core_we_reg         <= 0;
+          core_error_reg      <= 0;
+          core_write_data_reg <= 32'h00000000;
+          core_read_data_reg  <= 32'h00000000;
           
-          rx_engine_reg      <= RX_IDLE;
-          tx_engine_reg      <= TX_IDLE;
-          test_engine_reg    <= TEST_IDLE;
+          rx_engine_reg       <= RX_IDLE;
+          tx_engine_reg       <= TX_IDLE;
+          test_engine_reg     <= TEST_IDLE;
         end
       else
         begin
