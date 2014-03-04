@@ -52,7 +52,7 @@ module coretest(
                 input wire           tx_ack,
                 
                 // Interface to the core being tested.
-                output               core_reset,
+                output wire          core_reset,
                 output wire          core_cs,
                 output wire          core_we,
                 output wire [15 : 0] core_address,
@@ -624,6 +624,10 @@ module coretest(
       // Default assignments.
       core_reset_new     = 0;
       core_reset_we      = 0;
+      core_cs_new        = 0;
+      core_cs_we         = 0;
+      core_we_new        = 0;
+      core_we_we         = 0;
       cmd_accepted       = 0;
       extract_cmd_fields = 0;
       sample_core_output = 0;
