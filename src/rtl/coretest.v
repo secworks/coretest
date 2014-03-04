@@ -2,10 +2,10 @@
 //
 // coretest.v
 // ----------
-// Top level of the Cryptech test core. Simply a 32-bit interface
-// with some intrernal functionality to see that we can read and write
-// registers in the FPGA from the host. This core will be the basis
-// for all core top levels.
+// The Cryptech coretest testing module. Combined with an external
+// interface that sends and receives bytes using a SYN-ACK
+// handshake and a core to be tested, coretest can parse read
+// and write commands needed to test the connected core.
 //
 //
 // Author: Joachim Strombergson
