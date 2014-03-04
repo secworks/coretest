@@ -261,6 +261,8 @@ module coretest(
 
           rx_buffer_ptr_reg   <= 4'h0;
           tx_buffer_ptr_reg   <= 4'h0;
+
+          cmd_reg             <= 8'h00;
           
           core_reset_reg      <= 1;
           core_cs_reg         <= 0;
