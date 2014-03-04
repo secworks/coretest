@@ -212,13 +212,17 @@ module tb_coretest();
   //----------------------------------------------------------------
   task init_sim();
     begin
-      cycle_ctr  = 0;
-      error_ctr  = 0;
-      tc_ctr     = 0;
+      cycle_ctr         = 0;
+      error_ctr         = 0;
+      tc_ctr            = 0;
       
-      tb_clk     = 0;
-      tb_reset_n = 1;
-
+      tb_clk            = 0;
+      tb_reset_n        = 1;
+      tb_rx_syn         = 0;
+      tb_rx_data        = 8'h00;
+      tb_tx_ack         = 0;
+      tb_core_read_data = 32'h00000000;
+      tb_core_error     = 0;
     end
   endtask // init_sim
 
