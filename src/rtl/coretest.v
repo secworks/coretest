@@ -222,7 +222,7 @@ module coretest(
   assign tx_syn          = tmp_tx_syn;
   assign tx_data         = tx_buffer[tx_buffer_ptr_reg];
 
-  assign core_reset      = core_reset_reg;
+  assign core_reset      = core_reset_reg && reset_n;
   assign core_cs         = core_cs_reg;
   assign core_we         = core_we_reg;
   assign core_address    = core_address_reg;
@@ -262,7 +262,7 @@ module coretest(
           rx_buffer_ptr_reg  <= 4'h0;
           tx_buffer_ptr_reg  <= 4'h0;
 
-          core_reset_reg     <= 0;
+          core_reset_reg     <= 1;
           core_cs_reg        <= 0;
           core_we_reg        <= 0;
           core_error_reg     <= 0;
