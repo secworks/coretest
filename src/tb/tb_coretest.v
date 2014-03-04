@@ -146,7 +146,7 @@ module tb_coretest();
   // Observes operation on the bus interface and responds
   // on read operations.
   //----------------------------------------------------------------
-  always
+  always @*
     begin : bus_response
       if (tb_core_cs)
         begin
@@ -175,9 +175,17 @@ module tb_coretest();
       $display("State of DUT");
       $display("------------");
       $display("Inputs and outputs:");
+      $display("rx_syn = 0x01x, rx_data = 0x%02x, rx_ack = 0x%01x",
+               dut.rx_syn, dut.rx_data, dut.rx_ack);
+      $display("tx_syn = 0x01x, tx_data = 0x%02x, tx_ack = 0x%01x",
+               dut.tx_syn, dut.tx_data, dut.tx_ack);
+      $display("cs = 0x01x, we = 0x%01x, address = 0x%04x, write_data = 0x%08x, read_data = 0x%08x, error = 0x%01x",
+               dut.core_cs, dut.core_we, dut.core_address, dut.core_write_data, dut.core_read_data, dut.core_error);
       $display("");
 
       $display("Control signals and FSM state:");
+      $display("test_engine_reg = 0x%02x, cmd_reg = 0x%02x, rx_buffer_ptr = 0x%02x, tx_buffer_ptr = 0x%02x",
+               dut.test_engine_reg, dut.cmd_reg, dut.rx_buffer_ptr_reg, dut.tx_buffer_ptr_reg);
       $display("");
     end
   endtask // dump_dut_state
@@ -216,35 +224,22 @@ module tb_coretest();
 
 
   //----------------------------------------------------------------
-  // transmit_byte
+  // send_byte
   //
-  // Transmit a byte of data to the DUT receive port.
+  // Send a byte of data to the DUT.
   //----------------------------------------------------------------
-  task transmit_byte(input [7 : 0] data);
+  task send_byte(input [7 : 0] data);
     integer i;
     begin
-      $display("*** Transmitting byte 0x%02x to the dut.", data);
+      $display("*** Sending byte 0x%02x to the dut.", data);
 
-      #10;
-      
-      // Start bit
-      $display("*** Transmitting start bit.");
-      tb_rxd = 0;
-      #(CLK_PERIOD * dut.core.DEFAULT_CLK_RATE);
-
-      // Send the bits LSB first.
-      for (i = 0 ; i < 8 ; i = i + 1)
+      tb_rx_data = data;
+      tb_rx_syn  = 1;
+      while (!tb_rx_ack)
         begin
-          $display("*** Transmitting data[%1d] = 0x%01x.", i, data[i]);
-          tb_rxd = data[i];
-          #(CLK_PERIOD * dut.core.DEFAULT_CLK_RATE);
+          #CLK_PERIOD;
         end
-
-      // Send two stop bits. I.e. two bit times high (mark) value.
-      $display("*** Transmitting two stop bits.");
-      tb_rxd = 1;
-      #(2 * CLK_PERIOD * dut.core.DEFAULT_CLK_RATE * dut.core.DEFAULT_STOP_BITS);
-      $display("*** End of transmission.");
+      tb_rx_syn  = 0;
     end
   endtask // transmit_byte
 
