@@ -53,6 +53,13 @@ module tb_coretest();
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD      = CLK_HALF_PERIOD * 2;
   
+
+  parameter SOF = 8'h55;
+  parameter EOF = 8'haa;
+  parameter OP_RESET = 8'h01;
+  parameter OP_READ  = 8'h10;
+  parameter OP_WRITE = 8'h11;
+  
   
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -249,6 +256,27 @@ module tb_coretest();
 
   
   //----------------------------------------------------------------
+  // send_write_command
+  //
+  // Generates a write command to the dut.
+  //----------------------------------------------------------------
+  task send_write_command(input [15 : 0] addr, input [31 : 0] data);
+    begin
+      $display("*** Sending write command: address 0x%04x = 0x%08x.", addr, data);
+      send_byte(SOF);
+      send_byte(OP_WRITE);
+      send_byte(addr[15 : 8]);
+      send_byte(addr[7 : 0]);
+      send_byte(data[31 : 24]);
+      send_byte(data[23 : 16]);
+      send_byte(data[15 : 8]);
+      send_byte(data[7 : 0]);
+      send_byte(EOF);
+    end
+  endtask // send_write_command
+  
+  
+  //----------------------------------------------------------------
   // display_test_result()
   //
   // Display the accumulated test results.
@@ -279,7 +307,12 @@ module tb_coretest();
       dump_dut_state();
       reset_dut();
       dump_dut_state();
-      
+
+      send_write_command(16'h4224, 32'h1337beef);
+      dump_dut_state();
+
+      #(64 * CLK_PERIOD);
+
       display_test_result();
       $display("*** Simulation done.");
       $finish;
