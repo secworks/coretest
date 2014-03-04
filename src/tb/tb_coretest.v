@@ -256,6 +256,21 @@ module tb_coretest();
 
   
   //----------------------------------------------------------------
+  // send_reset_command
+  //
+  // Generates a reset command to the dut.
+  //----------------------------------------------------------------
+  task send_reset_command();
+    begin
+      $display("*** Sending reset command.");
+      send_byte(SOF);
+      send_byte(OP_RESET);
+      send_byte(EOF);
+    end
+  endtask // send_write_command
+
+  
+  //----------------------------------------------------------------
   // send_write_command
   //
   // Generates a write command to the dut.
@@ -306,6 +321,9 @@ module tb_coretest();
       init_sim();
       dump_dut_state();
       reset_dut();
+      dump_dut_state();
+
+      send_reset_command();
       dump_dut_state();
 
       send_write_command(16'h4224, 32'h1337beef);
