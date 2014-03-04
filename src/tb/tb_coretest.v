@@ -252,7 +252,7 @@ module tb_coretest();
         end
       tb_rx_syn  = 0;
     end
-  endtask // transmit_byte
+  endtask // send_byte
 
   
   //----------------------------------------------------------------
