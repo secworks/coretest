@@ -92,18 +92,18 @@ module tb_coretest();
                .rx_data(tb_rx_data),
                .rx_ack(tb_rx_ack),
                
-               .tx_syn(),
-               .tx_data(),
-               .tx_ack(),
+               .tx_syn(tb_tx_syn),
+               .tx_data(tb_tx_data),
+               .tx_ack(tb_tx_ack),
                 
                // Interface to the core being tested.
-               .core_reset(),
-               .core_cs(),
-               .core_we(),
-               .core_address(),
-               .core_write_data(),
-               .core_read_data(),
-               .core_error()
+               .core_reset(tb_core_reset),
+               .core_cs(tb_core_cs),
+               .core_we(tb_core_we),
+               .core_address(tb_core_address),
+               .core_write_data(tb_core_write_data),
+               .core_read_data(tb_core_read_data),
+               .core_error(tb_core_error)
               );
 
   
@@ -140,7 +140,30 @@ module tb_coretest();
         end
       cycle_ctr = cycle_ctr + 1;
     end
-    
+
+  //----------------------------------------------------------------
+  // bus_monitor_response
+  // Observes operation on the bus interface and responds
+  // on read operations.
+  //----------------------------------------------------------------
+  always
+    begin : bus_response
+      if (tb_core_cs)
+        begin
+          if (tb_core_we)
+            begin
+              $display("*** Write operation on bus: address 0x%04x = 0x%08x", 
+                       tb_core_address, tb_core_write_data);
+            end
+          else
+            begin
+              $display("*** REad operation on bus: address 0x%04x",
+                       tb_core_address);
+              tb_core_read_data = 32'hdeadbeef;
+            end
+        end
+    end // bus_response
+  
   
   //----------------------------------------------------------------
   // dump_dut_state()
