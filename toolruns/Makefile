@@ -42,7 +42,7 @@ CORETEST_TARGET = coretest.sim
 TESTCORE_SRC =../src/test_core/rtl/test_core.v
 TESTCORE_TARGET = testcore.sim
 
-UART_SRC =../src/uart/rtl/uart.v
+UART_SRC =../../uart/src/uart/rtl/uart.v ../../uart/src/uart/rtl/uart_core.v
 UART_TARGET = uartsim
 
 CC=iverilog
@@ -57,10 +57,6 @@ coretest: $(CORETEST_TB_SRC) $(CORETEST_SRC)
 
 testcore: $(TESTCORE_SRC)
 	$(CC) -o $(TESTCORE_TARGET) $(TESTCORE_SRC)
-
-
-uart: $(UART_SRC)
-	$(CC) -o $(UART_TARGET) $(UART_SRC)
 
 
 sim-coretest: $(CORETEST_TARGET)
