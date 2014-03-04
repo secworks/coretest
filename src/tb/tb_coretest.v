@@ -175,11 +175,11 @@ module tb_coretest();
       $display("State of DUT");
       $display("------------");
       $display("Inputs and outputs:");
-      $display("rx_syn = 0x01x, rx_data = 0x%02x, rx_ack = 0x%01x",
+      $display("rx_syn = 0x%01x, rx_data = 0x%02x, rx_ack = 0x%01x",
                dut.rx_syn, dut.rx_data, dut.rx_ack);
-      $display("tx_syn = 0x01x, tx_data = 0x%02x, tx_ack = 0x%01x",
+      $display("tx_syn = 0x%01x, tx_data = 0x%02x, tx_ack = 0x%01x",
                dut.tx_syn, dut.tx_data, dut.tx_ack);
-      $display("cs = 0x01x, we = 0x%01x, address = 0x%04x, write_data = 0x%08x, read_data = 0x%08x, error = 0x%01x",
+      $display("cs = 0x%01x, we = 0x%01x, address = 0x%04x, write_data = 0x%08x, read_data = 0x%08x, error = 0x%01x",
                dut.core_cs, dut.core_we, dut.core_address, dut.core_write_data, dut.core_read_data, dut.core_error);
       $display("");
 
