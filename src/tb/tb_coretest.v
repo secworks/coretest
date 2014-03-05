@@ -78,13 +78,16 @@ module tb_coretest();
   wire [7 : 0]  tb_tx_data;
   reg           tb_tx_ack;
 
-  wire          tb_core_reset;
+  wire          tb_core_reset_;
   wire          tb_core_cs;
   wire          tb_core_we;
   wire [15 : 0] tb_core_address;
   wire [31 : 0] tb_core_write_data;
   reg [31 : 0]  tb_core_read_data;
   reg           tb_core_error;
+
+  reg [7 : 0]   received_tx_data;
+  
   
 
   //----------------------------------------------------------------
@@ -104,7 +107,7 @@ module tb_coretest();
                .tx_ack(tb_tx_ack),
                 
                // Interface to the core being tested.
-               .core_reset(tb_core_reset),
+               .core_reset_n(tb_core_reset_n),
                .core_cs(tb_core_cs),
                .core_we(tb_core_we),
                .core_address(tb_core_address),
@@ -148,29 +151,6 @@ module tb_coretest();
       cycle_ctr = cycle_ctr + 1;
     end
 
-  //----------------------------------------------------------------
-  // bus_monitor_response
-  // Observes operation on the bus interface and responds
-  // on read operations.
-  //----------------------------------------------------------------
-  always @*
-    begin : bus_response
-      if (tb_core_cs)
-        begin
-          if (tb_core_we)
-            begin
-              $display("*** Write operation on bus: address 0x%04x = 0x%08x", 
-                       tb_core_address, tb_core_write_data);
-            end
-          else
-            begin
-              $display("*** REad operation on bus: address 0x%04x",
-                       tb_core_address);
-              tb_core_read_data = 32'hdeadbeef;
-            end
-        end
-    end // bus_response
-  
   
   //----------------------------------------------------------------
   // dump_dut_state()
@@ -227,7 +207,7 @@ module tb_coretest();
       tb_reset_n        = 1;
       tb_rx_syn         = 0;
       tb_rx_data        = 8'h00;
-      tb_tx_ack         = 0;
+      tb_tx_ack         = 1;
       tb_core_read_data = 32'h00000000;
       tb_core_error     = 0;
     end
@@ -359,14 +339,16 @@ module tb_coretest();
       reset_dut();
       dump_dut_state();
 
+      #(64 * CLK_PERIOD);
+
       send_reset_command();
-      dump_dut_state();
+//      dump_dut_state();
 
       send_read_command(16'h0123);
-      dump_dut_state();
+//      dump_dut_state();
 
       send_write_command(16'h4224, 32'h1337beef);
-      dump_dut_state();
+//      dump_dut_state();
 
       #(64 * CLK_PERIOD);
 
