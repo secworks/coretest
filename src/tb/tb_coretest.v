@@ -48,7 +48,7 @@ module tb_coretest();
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   parameter DEBUG           = 0;
-  parameter VERBOSE         = 0;
+  parameter VERBOSE         = 1;
 
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD      = CLK_HALF_PERIOD * 2;
@@ -244,13 +244,29 @@ module tb_coretest();
     begin
       $display("*** Sending byte 0x%02x to the dut.", data);
 
+      if (VERBOSE)
+        begin
+          $display("*** Setting RX data and RX SYN.");
+        end
       tb_rx_data = data;
       tb_rx_syn  = 1;
+
       while (!tb_rx_ack)
         begin
           #CLK_PERIOD;
+          if (VERBOSE)
+            begin
+              $display("*** Waiting for RX ACK.");
+            end
+        end
+
+      if (VERBOSE)
+        begin
+          $display("*** RX ACK seen. Dropping SYN.");
         end
       tb_rx_syn  = 0;
+
+      #(2 * CLK_PERIOD);
     end
   endtask // send_byte
 
@@ -266,6 +282,7 @@ module tb_coretest();
       send_byte(SOF);
       send_byte(OP_RESET);
       send_byte(EOF);
+      $display("*** Sending reset command done.");
     end
   endtask // send_write_command
 
@@ -283,6 +300,7 @@ module tb_coretest();
       send_byte(addr[15 : 8]);
       send_byte(addr[7 : 0]);
       send_byte(EOF);
+      $display("*** Sending read command done.");
     end
   endtask // send_write_command
 
@@ -304,6 +322,7 @@ module tb_coretest();
       send_byte(data[15 : 8]);
       send_byte(data[7 : 0]);
       send_byte(EOF);
+      $display("*** Sending write command done.");
     end
   endtask // send_write_command
   
