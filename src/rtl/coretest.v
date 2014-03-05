@@ -113,8 +113,6 @@ module coretest(
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
   reg          rx_syn_reg;
-  reg          rx_syn_new;
-  reg          rx_syn_we;
 
   reg          rx_ack_reg;
   reg          rx_ack_new;
@@ -200,7 +198,6 @@ module coretest(
   reg [7 : 0] tx_buffert_muxed7;
   reg [7 : 0] tx_buffert_muxed8;
 
-  reg tmp_rx_ack;
   reg tmp_tx_syn;
   
   reg cmd_available;
@@ -217,7 +214,7 @@ module coretest(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign rx_ack          = tmp_rx_ack;
+  assign rx_ack          = rx_ack_reg;
 
   assign tx_syn          = tmp_tx_syn;
   assign tx_data         = tx_buffer[tx_buffer_ptr_reg];
@@ -259,6 +256,9 @@ module coretest(
           tx_buffer[7]        <= 8'h00;
           tx_buffer[8]        <= 8'h00;
 
+          rx_syn_reg          <= 0;
+          rx_ack_reg          <= 0;
+          
           rx_buffer_ptr_reg   <= 4'h0;
           tx_buffer_ptr_reg   <= 4'h0;
 
@@ -278,6 +278,13 @@ module coretest(
         end
       else
         begin
+          rx_syn_reg <= rx_syn;
+
+          if (rx_ack_we)
+            begin
+              rx_ack_reg <= rx_ack_new;
+            end
+          
           if (rx_buffer_we)
             begin
               rx_buffer[rx_buffer_ptr_reg] <= rx_data;
@@ -488,7 +495,8 @@ module coretest(
   always @*
     begin: rx_engine
       // Default assignments
-      tmp_rx_ack        = 0;
+      rx_ack_new        = 0;
+      rx_ack_we         = 0;
       rx_buffer_we      = 0;
       rx_buffer_ptr_rst = 0;
       rx_buffer_ptr_inc = 0;
@@ -499,7 +507,7 @@ module coretest(
       case (rx_engine_reg)
         RX_IDLE:
           begin
-            if (rx_syn)
+            if (rx_syn_reg)
               begin
                 rx_buffer_we  = 1;
                 rx_engine_new = RX_ACK;
@@ -509,9 +517,14 @@ module coretest(
         
         RX_ACK:
           begin
-            tmp_rx_ack = 1;
-            if (!rx_syn)
+            rx_ack_new = 1;
+            rx_ack_we  = 1;
+
+            if (!rx_syn_reg)
               begin
+                rx_ack_new = 0;
+                rx_ack_we  = 1;
+                
                 if (rx_buffer[rx_buffer_ptr_reg] == EOC)
                   begin
                     rx_engine_new = RX_DONE;
