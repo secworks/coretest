@@ -89,11 +89,12 @@ module coretest(
   parameter RX_DONE = 3'h4;
 
   // rx_engine states.
-  parameter TX_IDLE = 3'h0;
-  parameter TX_SYN  = 3'h1;
-  parameter TX_NEXT = 3'h2;
-  parameter TX_SENT = 3'h3;
-  parameter TX_DONE = 3'h4;
+  parameter TX_IDLE  = 3'h0;
+  parameter TX_SYN   = 3'h1;
+  parameter TX_NOACK = 3'h2;
+  parameter TX_NEXT  = 3'h3;
+  parameter TX_SENT  = 3'h4;
+  parameter TX_DONE  = 3'h5;
   
   // test_engine states.
   parameter TEST_IDLE          = 8'h00;
@@ -631,6 +632,15 @@ module coretest(
               begin
                 tx_syn_new    = 0;
                 tx_syn_we     = 1;
+                tx_engine_new = TX_NOACK;
+                tx_engine_we  = 1;
+              end                
+          end
+
+        TX_NOACK:
+          begin
+            if (!tx_ack_reg)
+              begin
                 tx_engine_new = TX_NEXT;
                 tx_engine_we  = 1;
               end                
