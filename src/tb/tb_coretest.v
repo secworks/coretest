@@ -96,9 +96,8 @@ module tb_coretest();
   reg           tb_core_error;
 
   reg [7 : 0]   received_tx_data;
-  
-  
 
+  
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
@@ -139,6 +138,9 @@ module tb_coretest();
   
   //----------------------------------------------------------------
   // sys_monitor
+  //
+  // System monitor. Can display status about the dut and TB
+  // every cycle.
   //----------------------------------------------------------------
   always
     begin : sys_monitor
