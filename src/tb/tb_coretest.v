@@ -48,17 +48,26 @@ module tb_coretest();
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   parameter DEBUG           = 0;
-  parameter VERBOSE         = 1;
-
+  parameter VERBOSE         = 0;
+  parameter CMD_MONITOR     = 0;
+  
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD      = CLK_HALF_PERIOD * 2;
-  
 
-  parameter SOF = 8'h55;
-  parameter EOF = 8'haa;
-  parameter OP_RESET = 8'h01;
-  parameter OP_READ  = 8'h10;
-  parameter OP_WRITE = 8'h11;
+  // Command and response constants.
+  parameter SOC       = 8'h55;
+  parameter EOC       = 8'haa;
+  parameter RESET_CMD = 8'h01; 
+  parameter READ_CMD  = 8'h10; 
+  parameter WRITE_CMD = 8'h11; 
+
+  parameter SOR      = 8'haa;
+  parameter EOR      = 8'h55;
+  parameter UNKNOWN  = 8'hfe;
+  parameter ERROR    = 8'hfd;
+  parameter READ_OK  = 8'h7f;
+  parameter WRITE_OK = 8'h7e;
+  parameter RESET_OK = 8'h7d;
   
   
   //----------------------------------------------------------------
@@ -131,8 +140,8 @@ module tb_coretest();
     begin : clk_gen
       #CLK_HALF_PERIOD tb_clk = !tb_clk;
     end // clk_gen
-    
 
+  
   //----------------------------------------------------------------
   // sys_monitor
   //----------------------------------------------------------------
@@ -149,6 +158,22 @@ module tb_coretest();
           $display("cycle: 0x%016x", cycle_ctr);
         end
       cycle_ctr = cycle_ctr + 1;
+    end
+  
+
+  //----------------------------------------------------------------
+  // command_monitor
+  //
+  // Observes any read/write or reset commands generated
+  // by the DUT.
+  //----------------------------------------------------------------
+  always
+    begin : command_monitor
+      #(CLK_PERIOD);      
+      if (CMD_MONITOR)
+        begin
+          $display("");
+        end
     end
 
   
@@ -259,27 +284,27 @@ module tb_coretest();
   task send_reset_command();
     begin
       $display("*** Sending reset command.");
-      send_byte(SOF);
-      send_byte(OP_RESET);
-      send_byte(EOF);
+      send_byte(SOC);
+      send_byte(RESET_CMD);
+      send_byte(EOC);
       $display("*** Sending reset command done.");
     end
   endtask // send_write_command
 
   
   //----------------------------------------------------------------
-  // send_write_command
+  // send_read_command
   //
   // Generates a read command to the dut.
   //----------------------------------------------------------------
   task send_read_command(input [15 : 0] addr);
     begin
       $display("*** Sending read command: address 0x%04x.", addr);
-      send_byte(SOF);
-      send_byte(OP_READ);
+      send_byte(SOC);
+      send_byte(READ_CMD);
       send_byte(addr[15 : 8]);
       send_byte(addr[7 : 0]);
-      send_byte(EOF);
+      send_byte(EOC);
       $display("*** Sending read command done.");
     end
   endtask // send_write_command
@@ -293,15 +318,15 @@ module tb_coretest();
   task send_write_command(input [15 : 0] addr, input [31 : 0] data);
     begin
       $display("*** Sending write command: address 0x%04x = 0x%08x.", addr, data);
-      send_byte(SOF);
-      send_byte(OP_WRITE);
+      send_byte(SOC);
+      send_byte(WRITE_CMD);
       send_byte(addr[15 : 8]);
       send_byte(addr[7 : 0]);
       send_byte(data[31 : 24]);
       send_byte(data[23 : 16]);
       send_byte(data[15 : 8]);
       send_byte(data[7 : 0]);
-      send_byte(EOF);
+      send_byte(EOC);
       $display("*** Sending write command done.");
     end
   endtask // send_write_command
