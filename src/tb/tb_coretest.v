@@ -69,6 +69,8 @@ module tb_coretest();
   parameter WRITE_OK = 8'h7e;
   parameter RESET_OK = 8'h7d;
   
+  parameter MAX_MEM  = 32'h0000000f;
+
   
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -96,8 +98,10 @@ module tb_coretest();
   reg           tb_core_error;
 
   reg [7 : 0]   received_tx_data;
-
   
+  reg [31 : 0]  test_mem [0 : (MAX_MEM - 1'b1)];
+
+
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
@@ -188,7 +192,57 @@ module tb_coretest();
             end
         end
     end
+  
 
+  //----------------------------------------------------------------
+  // test_mem_logic
+  //
+  // The logic needed to implement the test memory. We basically
+  // implement a simple memory to allow read and write operations
+  // via commands to the DUT to really be executed.
+  //----------------------------------------------------------------
+  always @ (posedge tb_clk)
+    begin : test_mem_logic
+      if (tb_core_cs)
+            begin
+              if (tb_core_we)
+                begin
+                  if (tb_core_address < MAX_MEM)
+                    begin
+                      $display("Writing to test_mem[0x%08x] = 0x%08x",
+                           tb_core_address, tb_core_write_data);
+                      test_mem[tb_core_address] = tb_core_write_data;
+                    end
+                  else
+                    begin
+                      $display("Writing to incorrect address 0x%08x",
+                           tb_core_address);
+                      tb_core_error = 1;
+                    end
+                end
+              else
+                begin
+                  if (tb_core_address < MAX_MEM)
+                    begin
+                      $display("Reading from test_mem[0x%08x] = 0x%08x",
+                           tb_core_address, tb_core_read_data);
+                      tb_core_read_data = test_mem[tb_core_address];
+                    end
+                  else
+                    begin
+                      $display("Reading from incorrect address 0x%08x",
+                           tb_core_address);
+                      tb_core_error = 1;
+                    end
+                end
+            end
+      else
+        begin
+          tb_core_read_data = 32'h00000000;
+          tb_core_error     = 0;
+        end
+    end
+  
   
   //----------------------------------------------------------------
   // dump_dut_state()
@@ -246,8 +300,6 @@ module tb_coretest();
       tb_rx_syn         = 0;
       tb_rx_data        = 8'h00;
       tb_tx_ack         = 1;
-      tb_core_read_data = 32'h00000000;
-      tb_core_error     = 0;
     end
   endtask // init_sim
 
