@@ -49,7 +49,7 @@ module tb_coretest();
   //----------------------------------------------------------------
   parameter DEBUG           = 0;
   parameter VERBOSE         = 0;
-  parameter CMD_MONITOR     = 0;
+  parameter CMD_MONITOR     = 1;
   
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD      = CLK_HALF_PERIOD * 2;
@@ -167,7 +167,23 @@ module tb_coretest();
       #(CLK_PERIOD);      
       if (CMD_MONITOR)
         begin
-          $display("");
+          if (!tb_core_reset_n)
+            begin
+              $display("Core is being reset by coretest.");
+            end
+          else if (tb_core_cs)
+            begin
+              if (tb_core_we)
+                begin
+                  $display("Core is being written to: address 0x%08x = 0x%08x",
+                           tb_core_address, tb_core_write_data);
+                end
+              else
+                begin
+                  $display("Core is being read from: address 0x%08x = 0x%08x",
+                           tb_core_address, tb_core_read_data);
+                end
+            end
         end
     end
 
