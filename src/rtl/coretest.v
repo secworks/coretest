@@ -82,11 +82,13 @@ module coretest(
   parameter RESET_OK = 8'h7d;
 
   // rx_engine states.
-  parameter RX_IDLE = 3'h0;
-  parameter RX_SYN  = 3'h1;
-  parameter RX_ACK  = 3'h2;
-  parameter RX_CMD  = 3'h3;
-  parameter RX_DONE = 3'h4;
+  parameter RX_IDLE  = 3'h0;
+  parameter RX_SYN   = 3'h1;
+  parameter RX_ACK   = 3'h2;
+  parameter RX_NSYN  = 3'h4;
+  parameter RX_PDONE = 3'h5;
+  parameter RX_CMD   = 3'h6;
+  parameter RX_DONE  = 3'h7;
 
   // rx_engine states.
   parameter TX_IDLE  = 3'h0;
@@ -541,31 +543,42 @@ module coretest(
                 rx_engine_we  = 1;
               end
           end
+
         
         RX_ACK:
           begin
             rx_ack_new = 1;
             rx_ack_we  = 1;
+            rx_engine_new = RX_NSYN;
+            rx_engine_we  = 1;
+          end
 
+
+        RX_NSYN:
+          begin
             if (!rx_syn_reg)
               begin
-                rx_ack_new = 0;
-                rx_ack_we  = 1;
-                
-                if (rx_buffer[rx_buffer_ptr_reg] == EOC)
-                  begin
-                    rx_engine_new = RX_DONE;
-                    rx_engine_we  = 1;
-                  end
-
-                else
-                  begin
-                    rx_buffer_ptr_inc = 1;
-                    rx_engine_new     = RX_IDLE;
-                    rx_engine_we      = 1;
-                  end
+                rx_ack_new    = 0;
+                rx_ack_we     = 1;
+                rx_engine_new = RX_PDONE;
+                rx_engine_we  = 1;
               end
           end
+
+
+        RX_PDONE:
+          if (rx_buffer[rx_buffer_ptr_reg] == EOC)
+            begin
+              rx_engine_new = RX_DONE;
+              rx_engine_we  = 1;
+            end
+          else
+            begin
+              rx_buffer_ptr_inc = 1;
+              rx_engine_new     = RX_IDLE;
+              rx_engine_we      = 1;
+            end
+
 
         RX_DONE:
           begin
