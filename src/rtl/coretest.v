@@ -558,8 +558,6 @@ module coretest(
           begin
             if (!rx_syn_reg)
               begin
-                rx_ack_new    = 0;
-                rx_ack_we     = 1;
                 rx_engine_new = RX_PDONE;
                 rx_engine_we  = 1;
               end
@@ -567,17 +565,21 @@ module coretest(
 
 
         RX_PDONE:
-          if (rx_buffer[rx_buffer_ptr_reg] == EOC)
-            begin
-              rx_engine_new = RX_DONE;
-              rx_engine_we  = 1;
-            end
-          else
-            begin
-              rx_buffer_ptr_inc = 1;
-              rx_engine_new     = RX_IDLE;
-              rx_engine_we      = 1;
-            end
+          begin
+            rx_ack_new = 0;
+            rx_ack_we  = 1;
+            if (rx_buffer[rx_buffer_ptr_reg] == EOC)
+              begin
+                rx_engine_new = RX_DONE;
+                rx_engine_we  = 1;
+              end
+            else
+              begin
+                rx_buffer_ptr_inc = 1;
+                rx_engine_new     = RX_IDLE;
+                rx_engine_we      = 1;
+              end
+          end
 
 
         RX_DONE:
