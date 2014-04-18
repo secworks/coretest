@@ -86,11 +86,11 @@ module coretest(
   parameter RX_SYN   = 3'h1;
   parameter RX_ACK   = 3'h2;
   parameter RX_NSYN  = 3'h4;
-  parameter RX_PDONE = 3'h5;
+  parameter RX_PARSE = 3'h5;
   parameter RX_CMD   = 3'h6;
   parameter RX_DONE  = 3'h7;
 
-  // rx_engine states.
+  // tx_engine states.
   parameter TX_IDLE  = 3'h0;
   parameter TX_SYN   = 3'h1;
   parameter TX_NOACK = 3'h2;
@@ -558,13 +558,13 @@ module coretest(
           begin
             if (!rx_syn_reg)
               begin
-                rx_engine_new = RX_PDONE;
+                rx_engine_new = RX_PARSE;
                 rx_engine_we  = 1;
               end
           end
 
 
-        RX_PDONE:
+        RX_PARSE:
           begin
             rx_ack_new = 0;
             rx_ack_we  = 1;
