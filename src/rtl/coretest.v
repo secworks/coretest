@@ -187,8 +187,8 @@ module coretest(
   reg          rx_buffer_ctr_inc;
   reg          rx_buffer_ctr_dec;
   reg          rx_buffer_ctr_rst;
-  reg          rx_buffer_ctr_full;
-  reg          rx_buffer_ctr_empty;
+  reg          rx_buffer_full;
+  reg          rx_buffer_empty;
   
   reg [7 : 0]  rx_buffer [0 : 15];
   reg          rx_buffer_we;
@@ -217,8 +217,8 @@ module coretest(
   reg          tx_buffer_ctr_inc;
   reg          tx_buffer_ctr_dec;
   reg          tx_buffer_ctr_rst;
-  reg          tx_buffer_ctr_full;
-  reg          tx_buffer_ctr_empty;
+  reg          tx_buffer_full;
+  reg          tx_buffer_empty;
 
   reg [7 : 0]  tx_buffer [0 : 15];
   reg          tx_buffer_we;
@@ -584,55 +584,96 @@ module coretest(
 
   
   //----------------------------------------------------------------
-  // rx_wr_buffer_ptr
+  // rx_buffer_rd_ptr
   //
-  // Logic for the rx buffer pointer. Supports reset and
+  // Logic for the rx buffer read pointer. Supports reset and
   // incremental updates.
   //----------------------------------------------------------------
   always @*
-    begin: rx_wr_buffer_ptr
+    begin: rx_buffer_rd_ ptr
       // Default assignments
-      rx__wr_buffer_ptr_new = 4'h0;
-      rx__wr_buffer_ptr_we  = 0;
+      rx_buffer_rd_ptr_new = 4'h0;
+      rx_buffer_rd_ptr_we  = 0;
       
-      if (rx_wr_buffer_ptr_rst)
+      if (rx_buffer_rd_ptr_rst)
         begin
-          rx_wr_buffer_ptr_new = 4'h0;
-          rx_wr_buffer_ptr_we  = 1;
+          rx_buffer_rd_ptr_new = 4'h0;
+          rx_buffer_rd_ptr_we  = 1;
         end
       
-      else if (rx_wr_buffer_ptr_inc)
+      else if (rx_buffer_ptr_inc)
         begin
-          rx_wr_buffer_ptr_new = rx_wr_buffer_ptr_reg + 1'b1;
-          rx_wr_buffer_ptr_we  = 1;
+          rx_buffer_rd_ptr_new = rx_buffer_rd_ptr_reg + 1'b1;
+          rx_buffer_rd_ptr_we  = 1;
         end
-    end // rx_wr_buffer_ptr
+    end // rx_buffer_rd_ptr
 
   
   //----------------------------------------------------------------
-  // rx_rd_buffer_ptr
+  // rx_buffer_wr_ptr
   //
-  // Logic for the rx buffer pointer. Supports reset and
+  // Logic for the rx buffer write pointer. Supports reset and
   // incremental updates.
   //----------------------------------------------------------------
   always @*
-    begin: rx_rd_buffer_ptr
+    begin: rx_buffer_wr_ptr
       // Default assignments
-      rx__rd_buffer_ptr_new = 4'h0;
-      rx__rd_buffer_ptr_we  = 0;
+      rx_buffer_wr_ptr_new = 4'h0;
+      rx_buffer_wr_ptr_we  = 0;
       
-      if (rx_rd_buffer_ptr_rst)
+      if (rx_buffer_wr_ptr_rst)
         begin
-          rx_rd_buffer_ptr_new = 4'h0;
-          rx_rd_buffer_ptr_we  = 1;
+          rx_buffer_wr_ptr_new = 4'h0;
+          rx_buffer_wr_ptr_we  = 1;
         end
       
-      else if (rx_rd_buffer_ptr_inc)
+      else if (rx_buffer_ptr_inc)
         begin
-          rx_rd_buffer_ptr_new = rx_rd_buffer_ptr_reg + 1'b1;
-          rx_rd_buffer_ptr_we  = 1;
+          rx_buffer_wr_ptr_new = rx_buffer_wr_ptr_reg + 1'b1;
+          rx_buffer_wr_ptr_we  = 1;
         end
-    end // rx_rd_buffer_ptr
+    end // rx_buffer_wr_ptr
+
+  
+  //----------------------------------------------------------------
+  // rx_buffer_ctr
+  //
+  // Logic for the rx buffer element counter.
+  //----------------------------------------------------------------
+  always @*
+    begin: rx_buffer_rd_ ptr
+      // Default assignments
+      rx_buffer_ctr_new = 4'h0;
+      rx_buffer_ctr_we  = 1'b0;
+      rx_buffer_empty   = 1'b0;
+      rx_buffer_full    = 1'b0;
+      
+      if (rx_buffer_ctr_rst)
+        begin
+          rx_buffer_ctr_new = 4'h0;
+          rx_buffer_ctr_we  = 1;
+        end
+      else if (rx_buffer_ctr_inc)
+        begin
+          rx_buffer_ctr_new = rx_buffer_ctr_reg + 1'b1;
+          rx_buffer_ctr_we  = 1;
+        end
+      else if (rx_buffer_ctr_dec)
+        begin
+          rx_buffer_ctr_new = rx_buffer_ctr_reg - 1'b1;
+          rx_buffer_ctr_we  = 1;
+        end
+
+      if (rx_buffer_ctr_reg == 4'h0)
+        begin
+          rx_buffer_empty = 1'b1;
+        end
+
+      if (rx_buffer_ctr_reg == BUFFER_MAX)
+        begin
+          rx_buffer_full = 1'b1;
+        end
+    end // rx_buffer_rd_ptr
 
   
   //----------------------------------------------------------------
