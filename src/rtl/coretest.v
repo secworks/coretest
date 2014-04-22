@@ -567,18 +567,18 @@ module coretest(
     begin: rx_buffer_ptr
       // Default assignments
       rx_buffer_ptr_new = 4'h0;
-      rx_buffer_ptr_we  = 0;
+      rx_buffer_ptr_we  = 1'b0;
       
       if (rx_buffer_ptr_rst)
         begin
           rx_buffer_ptr_new = 4'h0;
-          rx_buffer_ptr_we  = 1;
+          rx_buffer_ptr_we  = 1'b1;
         end
       
       else if (rx_buffer_ptr_inc)
         begin
           rx_buffer_ptr_new = rx_buffer_ptr_reg + 1'b1;
-          rx_buffer_ptr_we  = 1;
+          rx_buffer_ptr_we  = 1'b1;
         end
     end // rx_buffer_ptr
 
@@ -593,18 +593,18 @@ module coretest(
     begin: rx_buffer_rd_ ptr
       // Default assignments
       rx_buffer_rd_ptr_new = 4'h0;
-      rx_buffer_rd_ptr_we  = 0;
+      rx_buffer_rd_ptr_we  = 1'b0;
       
       if (rx_buffer_rd_ptr_rst)
         begin
           rx_buffer_rd_ptr_new = 4'h0;
-          rx_buffer_rd_ptr_we  = 1;
+          rx_buffer_rd_ptr_we  = 1'b1;
         end
       
       else if (rx_buffer_ptr_inc)
         begin
           rx_buffer_rd_ptr_new = rx_buffer_rd_ptr_reg + 1'b1;
-          rx_buffer_rd_ptr_we  = 1;
+          rx_buffer_rd_ptr_we  = 1'b1;
         end
     end // rx_buffer_rd_ptr
 
@@ -619,18 +619,18 @@ module coretest(
     begin: rx_buffer_wr_ptr
       // Default assignments
       rx_buffer_wr_ptr_new = 4'h0;
-      rx_buffer_wr_ptr_we  = 0;
+      rx_buffer_wr_ptr_we  = 1'b0;
       
       if (rx_buffer_wr_ptr_rst)
         begin
           rx_buffer_wr_ptr_new = 4'h0;
-          rx_buffer_wr_ptr_we  = 1;
+          rx_buffer_wr_ptr_we  = 1'b1;
         end
       
       else if (rx_buffer_ptr_inc)
         begin
           rx_buffer_wr_ptr_new = rx_buffer_wr_ptr_reg + 1'b1;
-          rx_buffer_wr_ptr_we  = 1;
+          rx_buffer_wr_ptr_we  = 1'b1;
         end
     end // rx_buffer_wr_ptr
 
@@ -641,7 +641,7 @@ module coretest(
   // Logic for the rx buffer element counter.
   //----------------------------------------------------------------
   always @*
-    begin: rx_buffer_rd_ ptr
+    begin: rx_buffer_ctr
       // Default assignments
       rx_buffer_ctr_new = 4'h0;
       rx_buffer_ctr_we  = 1'b0;
@@ -651,17 +651,17 @@ module coretest(
       if (rx_buffer_ctr_rst)
         begin
           rx_buffer_ctr_new = 4'h0;
-          rx_buffer_ctr_we  = 1;
+          rx_buffer_ctr_we  = 1'b1;
         end
       else if (rx_buffer_ctr_inc)
         begin
           rx_buffer_ctr_new = rx_buffer_ctr_reg + 1'b1;
-          rx_buffer_ctr_we  = 1;
+          rx_buffer_ctr_we  = 1'b1;
         end
       else if (rx_buffer_ctr_dec)
         begin
           rx_buffer_ctr_new = rx_buffer_ctr_reg - 1'b1;
-          rx_buffer_ctr_we  = 1;
+          rx_buffer_ctr_we  = 1'b1;
         end
 
       if (rx_buffer_ctr_reg == 4'h0)
@@ -673,8 +673,101 @@ module coretest(
         begin
           rx_buffer_full = 1'b1;
         end
-    end // rx_buffer_rd_ptr
+    end // rx_buffer_ctr
 
+  
+  //----------------------------------------------------------------
+  // tx_buffer_rd_ptr
+  //
+  // Logic for the tx buffer read pointer. Supports reset and
+  // incremental updates.
+  //----------------------------------------------------------------
+  always @*
+    begin: tx_buffer_rd_ ptr
+      // Default assignments
+      tx_buffer_rd_ptr_new = 4'h0;
+      tx_buffer_rd_ptr_we  = 1'b0;
+      
+      if (tx_buffer_rd_ptr_rst)
+        begin
+          tx_buffer_rd_ptr_new = 4'h0;
+          tx_buffer_rd_ptr_we  = 1;
+        end
+      
+      else if (tx_buffer_ptr_inc)
+        begin
+          tx_buffer_rd_ptr_new = tx_buffer_rd_ptr_reg + 1'b1;
+          tx_buffer_rd_ptr_we  = 1;
+        end
+    end // tx_buffer_rd_ptr
+
+  
+  //----------------------------------------------------------------
+  // tx_buffer_wr_ptr
+  //
+  // Logic for the tx buffer write pointer. Supports reset and
+  // incremental updates.
+  //----------------------------------------------------------------
+  always @*
+    begin: tx_buffer_wr_ptr
+      // Default assignments
+      tx_buffer_wr_ptr_new = 4'h0;
+      tx_buffer_wr_ptr_we  = 1'b0;
+      
+      if (tx_buffer_wr_ptr_rst)
+        begin
+          tx_buffer_wr_ptr_new = 4'h0;
+          tx_buffer_wr_ptr_we  = 1'b1;
+        end
+      
+      else if (tx_buffer_ptr_inc)
+        begin
+          tx_buffer_wr_ptr_new = tx_buffer_wr_ptr_reg + 1'b1;
+          tx_buffer_wr_ptr_we  = 1'b1;
+        end
+    end // tx_buffer_wr_ptr
+
+  
+  //----------------------------------------------------------------
+  // tx_buffer_ctr
+  //
+  // Logic for the tx buffer element counter.
+  //----------------------------------------------------------------
+  always @*
+    begin: tx_buffer_ctr
+      // Default assignments
+      tx_buffer_ctr_new = 4'h0;
+      tx_buffer_ctr_we  = 1'b0;
+      tx_buffer_empty   = 1'b0;
+      tx_buffer_full    = 1'b0;
+      
+      if (tx_buffer_ctr_rst)
+        begin
+          tx_buffer_ctr_new = 4'h0;
+          tx_buffer_ctr_we  = 1'b1;
+        end
+      else if (tx_buffer_ctr_inc)
+        begin
+          tx_buffer_ctr_new = tx_buffer_ctr_reg + 1'b1;
+          tx_buffer_ctr_we  = 1'b1;
+        end
+      else if (tx_buffer_ctr_dec)
+        begin
+          tx_buffer_ctr_new = tx_buffer_ctr_reg - 1'b1;
+          tx_buffer_ctr_we  = 1'b1;
+        end
+
+      if (tx_buffer_ctr_reg == 4'h0)
+        begin
+          tx_buffer_empty = 1'b1;
+        end
+
+      if (tx_buffer_ctr_reg == BUFFER_MAX)
+        begin
+          tx_buffer_full = 1'b1;
+        end
+    end // tx_buffer_ctr
+  
   
   //----------------------------------------------------------------
   // tx_buffer_ptr
@@ -686,18 +779,18 @@ module coretest(
     begin: tx_buffer_ptr
       // Default assignments
       tx_buffer_ptr_new = 4'h0;
-      tx_buffer_ptr_we  = 0;
+      tx_buffer_ptr_we  = 1'b0;
       
       if (tx_buffer_ptr_rst)
         begin
           tx_buffer_ptr_new = 4'h0;
-          tx_buffer_ptr_we  = 1;
+          tx_buffer_ptr_we  = 1'b1;
         end
       
       else if (tx_buffer_ptr_inc)
         begin
           tx_buffer_ptr_new = tx_buffer_ptr_reg + 1'b1;
-          tx_buffer_ptr_we  = 1;
+          tx_buffer_ptr_we  = 1'b1;
         end
     end // tx_buffer_ptr
   
@@ -712,15 +805,15 @@ module coretest(
   always @*
     begin: rx_engine
       // Default assignments
-      rx_ack_new        = 0;
-      rx_ack_we         = 0;
-      rx_buffer_we      = 0;
-      rx_buffer_ptr_rst = 0;
-      rx_buffer_ptr_inc = 0;
-      cmd_available_new = 0;
-      cmd_available_we  = 0;
+      rx_ack_new        = 1'b0;
+      rx_ack_we         = 1'b0;
+      rx_buffer_we      = 1'b0;
+      rx_buffer_ptr_rst = 1'b0;
+      rx_buffer_ptr_inc = 1'b0;
+      cmd_available_new = 1'b0;
+      cmd_available_we  = 1'b0;
       rx_engine_new     = RX_IDLE;
-      rx_engine_we      = 0;
+      rx_engine_we      = 1'b0;
       
       case (rx_engine_reg)
         RX_IDLE:
