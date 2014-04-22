@@ -65,6 +65,9 @@ module coretest(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
+  // Max elements in read and write buffers.
+  parameter BUFFER_MAX = 4'hf;
+
   // Command constants.
   parameter SOC       = 8'h55;
   parameter EOC       = 8'haa;
@@ -112,7 +115,7 @@ module coretest(
   parameter TEST_WR_END        = 8'h62;
   parameter TEST_UNKNOWN       = 8'h80;
   parameter TEST_SEND_RESPONSE = 8'hc0;
-
+  
   
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -178,17 +181,46 @@ module coretest(
   reg          rx_rd_buffer_ptr_inc;
   reg          rx_rd_buffer_ptr_rst;
 
+  reg [3 : 0]  rx_buffer_ctr_reg;
+  reg [3 : 0]  rx_buffer_ctr_new;
+  reg          rx_buffer_ctr_we;
+  reg          rx_buffer_ctr_inc;
+  reg          rx_buffer_ctr_dec;
+  reg          rx_buffer_ctr_rst;
+  reg          rx_buffer_ctr_full;
+  reg          rx_buffer_ctr_empty;
+  
+  reg [7 : 0]  rx_buffer [0 : 15];
+  reg          rx_buffer_we;
   
   reg [3 : 0]  tx_buffer_ptr_reg;
   reg [3 : 0]  tx_buffer_ptr_new;
   reg          tx_buffer_ptr_we;
   reg          tx_buffer_ptr_rst;
   reg          tx_buffer_ptr_inc;
-  
-  reg [7 : 0]  rx_buffer [0 : 8];
-  reg          rx_buffer_we;
 
-  reg [7 : 0]  tx_buffer [0 : 8];
+  reg [3 : 0]  tx_wr_buffer_ptr_reg;
+  reg [3 : 0]  tx_wr_buffer_ptr_new;
+  reg          tx_wr_buffer_ptr_we;
+  reg          tx_wr_buffer_ptr_inc;
+  reg          tx_wr_buffer_ptr_rst;
+
+  reg [3 : 0]  tx_rd_buffer_ptr_reg;
+  reg [3 : 0]  tx_rd_buffer_ptr_new;
+  reg          tx_rd_buffer_ptr_we;
+  reg          tx_rd_buffer_ptr_inc;
+  reg          tx_rd_buffer_ptr_rst;
+
+  reg [3 : 0]  tx_buffer_ctr_reg;
+  reg [3 : 0]  tx_buffer_ctr_new;
+  reg          tx_buffer_ctr_we;
+  reg          tx_buffer_ctr_inc;
+  reg          tx_buffer_ctr_dec;
+  reg          tx_buffer_ctr_rst;
+  reg          tx_buffer_ctr_full;
+  reg          tx_buffer_ctr_empty;
+
+  reg [7 : 0]  tx_buffer [0 : 15];
   reg          tx_buffer_we;
   
   reg [2 : 0]  rx_engine_reg;
@@ -259,6 +291,13 @@ module coretest(
           rx_buffer[6]        <= 8'h00;
           rx_buffer[7]        <= 8'h00;
           rx_buffer[8]        <= 8'h00;
+          rx_buffer[9]        <= 8'h00;
+          rx_buffer[10]       <= 8'h00;
+          rx_buffer[11]       <= 8'h00;
+          rx_buffer[12]       <= 8'h00;
+          rx_buffer[13]       <= 8'h00;
+          rx_buffer[14]       <= 8'h00;
+          rx_buffer[15]       <= 8'h00;
           
           tx_buffer[0]        <= 8'h00;
           tx_buffer[1]        <= 8'h00;
@@ -269,16 +308,27 @@ module coretest(
           tx_buffer[6]        <= 8'h00;
           tx_buffer[7]        <= 8'h00;
           tx_buffer[8]        <= 8'h00;
+          tx_buffer[9]        <= 8'h00;
+          tx_buffer[10]       <= 8'h00;
+          tx_buffer[11]       <= 8'h00;
+          tx_buffer[12]       <= 8'h00;
+          tx_buffer[13]       <= 8'h00;
+          tx_buffer[14]       <= 8'h00;
+          tx_buffer[15]       <= 8'h00;
 
           rx_syn_reg          <= 0;
           rx_ack_reg          <= 0;
           tx_ack_reg          <= 0;
           tx_syn_reg          <= 0;
           
-          rx_buffer_ptr_reg   <= 4'h0;
+          rx_buffer_ptr_reg    <= 4'h0;
           rx_wr_buffer_ptr_reg <= 4'h0;
           rx_rd_buffer_ptr_reg <= 4'h0;
-          tx_buffer_ptr_reg   <= 4'h0;
+
+
+          tx_buffer_ptr_reg    <= 4'h0;
+          tx_wr_buffer_ptr_reg <= 4'h0;
+          tx_rd_buffer_ptr_reg <= 4'h0;
 
           send_response_reg   <= 0;
           response_sent_reg   <= 0;
