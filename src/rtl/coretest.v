@@ -165,6 +165,19 @@ module coretest(
   reg          rx_buffer_ptr_we;
   reg          rx_buffer_ptr_rst;
   reg          rx_buffer_ptr_inc;
+
+  reg [3 : 0]  rx_wr_buffer_ptr_reg;
+  reg [3 : 0]  rx_wr_buffer_ptr_new;
+  reg          rx_wr_buffer_ptr_we;
+  reg          rx_wr_buffer_ptr_inc;
+  reg          rx_wr_buffer_ptr_rst;
+
+  reg [3 : 0]  rx_rd_buffer_ptr_reg;
+  reg [3 : 0]  rx_rd_buffer_ptr_new;
+  reg          rx_rd_buffer_ptr_we;
+  reg          rx_rd_buffer_ptr_inc;
+  reg          rx_rd_buffer_ptr_rst;
+
   
   reg [3 : 0]  tx_buffer_ptr_reg;
   reg [3 : 0]  tx_buffer_ptr_new;
@@ -263,6 +276,8 @@ module coretest(
           tx_syn_reg          <= 0;
           
           rx_buffer_ptr_reg   <= 4'h0;
+          rx_wr_buffer_ptr_reg <= 4'h0;
+          rx_rd_buffer_ptr_reg <= 4'h0;
           tx_buffer_ptr_reg   <= 4'h0;
 
           send_response_reg   <= 0;
@@ -319,6 +334,16 @@ module coretest(
           if (rx_buffer_ptr_we)
             begin
               rx_buffer_ptr_reg <= rx_buffer_ptr_new;
+            end
+          
+          if (rx_wr_buffer_ptr_we)
+            begin
+              rx_wr_buffer_ptr_reg <= rx_wr_buffer_ptr_new;
+            end
+          
+          if (rx_rd_buffer_ptr_we)
+            begin
+              rx_rd_buffer_ptr_reg <= rx_rd_buffer_ptr_new;
             end
           
           if (tx_buffer_ptr_we)
@@ -485,6 +510,58 @@ module coretest(
           rx_buffer_ptr_we  = 1;
         end
     end // rx_buffer_ptr
+
+  
+  //----------------------------------------------------------------
+  // rx_wr_buffer_ptr
+  //
+  // Logic for the rx buffer pointer. Supports reset and
+  // incremental updates.
+  //----------------------------------------------------------------
+  always @*
+    begin: rx_wr_buffer_ptr
+      // Default assignments
+      rx__wr_buffer_ptr_new = 4'h0;
+      rx__wr_buffer_ptr_we  = 0;
+      
+      if (rx_wr_buffer_ptr_rst)
+        begin
+          rx_wr_buffer_ptr_new = 4'h0;
+          rx_wr_buffer_ptr_we  = 1;
+        end
+      
+      else if (rx_wr_buffer_ptr_inc)
+        begin
+          rx_wr_buffer_ptr_new = rx_wr_buffer_ptr_reg + 1'b1;
+          rx_wr_buffer_ptr_we  = 1;
+        end
+    end // rx_wr_buffer_ptr
+
+  
+  //----------------------------------------------------------------
+  // rx_rd_buffer_ptr
+  //
+  // Logic for the rx buffer pointer. Supports reset and
+  // incremental updates.
+  //----------------------------------------------------------------
+  always @*
+    begin: rx_rd_buffer_ptr
+      // Default assignments
+      rx__rd_buffer_ptr_new = 4'h0;
+      rx__rd_buffer_ptr_we  = 0;
+      
+      if (rx_rd_buffer_ptr_rst)
+        begin
+          rx_rd_buffer_ptr_new = 4'h0;
+          rx_rd_buffer_ptr_we  = 1;
+        end
+      
+      else if (rx_rd_buffer_ptr_inc)
+        begin
+          rx_rd_buffer_ptr_new = rx_rd_buffer_ptr_reg + 1'b1;
+          rx_rd_buffer_ptr_we  = 1;
+        end
+    end // rx_rd_buffer_ptr
 
   
   //----------------------------------------------------------------
