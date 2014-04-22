@@ -169,17 +169,17 @@ module coretest(
   reg          rx_buffer_ptr_rst;
   reg          rx_buffer_ptr_inc;
 
-  reg [3 : 0]  rx_wr_buffer_ptr_reg;
-  reg [3 : 0]  rx_wr_buffer_ptr_new;
-  reg          rx_wr_buffer_ptr_we;
-  reg          rx_wr_buffer_ptr_inc;
-  reg          rx_wr_buffer_ptr_rst;
+  reg [3 : 0]  rx_buffer_rd_ptr_reg;
+  reg [3 : 0]  rx_buffer_rd_ptr_new;
+  reg          rx_buffer_rd_ptr_we;
+  reg          rx_buffer_rd_ptr_inc;
+  reg          rx_buffer_rd_ptr_rst;
 
-  reg [3 : 0]  rx_rd_buffer_ptr_reg;
-  reg [3 : 0]  rx_rd_buffer_ptr_new;
-  reg          rx_rd_buffer_ptr_we;
-  reg          rx_rd_buffer_ptr_inc;
-  reg          rx_rd_buffer_ptr_rst;
+  reg [3 : 0]  rx_buffer_wr_ptr_reg;
+  reg [3 : 0]  rx_buffer_wr_ptr_new;
+  reg          rx_buffer_wr_ptr_we;
+  reg          rx_buffer_wr_ptr_inc;
+  reg          rx_buffer_wr_ptr_rst;
 
   reg [3 : 0]  rx_buffer_ctr_reg;
   reg [3 : 0]  rx_buffer_ctr_new;
@@ -199,17 +199,17 @@ module coretest(
   reg          tx_buffer_ptr_rst;
   reg          tx_buffer_ptr_inc;
 
-  reg [3 : 0]  tx_wr_buffer_ptr_reg;
-  reg [3 : 0]  tx_wr_buffer_ptr_new;
-  reg          tx_wr_buffer_ptr_we;
-  reg          tx_wr_buffer_ptr_inc;
-  reg          tx_wr_buffer_ptr_rst;
+  reg [3 : 0]  tx_buffer_rd_ptr_reg;
+  reg [3 : 0]  tx_buffer_rd_ptr_new;
+  reg          tx_buffer_rd_ptr_we;
+  reg          tx_buffer_rd_ptr_inc;
+  reg          tx_buffer_rd_ptr_rst;
 
-  reg [3 : 0]  tx_rd_buffer_ptr_reg;
-  reg [3 : 0]  tx_rd_buffer_ptr_new;
-  reg          tx_rd_buffer_ptr_we;
-  reg          tx_rd_buffer_ptr_inc;
-  reg          tx_rd_buffer_ptr_rst;
+  reg [3 : 0]  tx_buffer_wr_ptr_reg;
+  reg [3 : 0]  tx_buffer_wr_ptr_new;
+  reg          tx_buffer_wr_ptr_we;
+  reg          tx_buffer_wr_ptr_inc;
+  reg          tx_buffer_wr_ptr_rst;
 
   reg [3 : 0]  tx_buffer_ctr_reg;
   reg [3 : 0]  tx_buffer_ctr_new;
@@ -282,71 +282,72 @@ module coretest(
     begin: reg_update
       if (!reset_n)
         begin
-          rx_buffer[0]        <= 8'h00;
-          rx_buffer[1]        <= 8'h00;
-          rx_buffer[2]        <= 8'h00;
-          rx_buffer[3]        <= 8'h00;
-          rx_buffer[4]        <= 8'h00;
-          rx_buffer[5]        <= 8'h00;
-          rx_buffer[6]        <= 8'h00;
-          rx_buffer[7]        <= 8'h00;
-          rx_buffer[8]        <= 8'h00;
-          rx_buffer[9]        <= 8'h00;
-          rx_buffer[10]       <= 8'h00;
-          rx_buffer[11]       <= 8'h00;
-          rx_buffer[12]       <= 8'h00;
-          rx_buffer[13]       <= 8'h00;
-          rx_buffer[14]       <= 8'h00;
-          rx_buffer[15]       <= 8'h00;
+          rx_buffer[0]         <= 8'h00;
+          rx_buffer[1]         <= 8'h00;
+          rx_buffer[2]         <= 8'h00;
+          rx_buffer[3]         <= 8'h00;
+          rx_buffer[4]         <= 8'h00;
+          rx_buffer[5]         <= 8'h00;
+          rx_buffer[6]         <= 8'h00;
+          rx_buffer[7]         <= 8'h00;
+          rx_buffer[8]         <= 8'h00;
+          rx_buffer[9]         <= 8'h00;
+          rx_buffer[10]        <= 8'h00;
+          rx_buffer[11]        <= 8'h00;
+          rx_buffer[12]        <= 8'h00;
+          rx_buffer[13]        <= 8'h00;
+          rx_buffer[14]        <= 8'h00;
+          rx_buffer[15]        <= 8'h00;
           
-          tx_buffer[0]        <= 8'h00;
-          tx_buffer[1]        <= 8'h00;
-          tx_buffer[2]        <= 8'h00;
-          tx_buffer[3]        <= 8'h00;
-          tx_buffer[4]        <= 8'h00;
-          tx_buffer[5]        <= 8'h00;
-          tx_buffer[6]        <= 8'h00;
-          tx_buffer[7]        <= 8'h00;
-          tx_buffer[8]        <= 8'h00;
-          tx_buffer[9]        <= 8'h00;
-          tx_buffer[10]       <= 8'h00;
-          tx_buffer[11]       <= 8'h00;
-          tx_buffer[12]       <= 8'h00;
-          tx_buffer[13]       <= 8'h00;
-          tx_buffer[14]       <= 8'h00;
-          tx_buffer[15]       <= 8'h00;
+          tx_buffer[0]         <= 8'h00;
+          tx_buffer[1]         <= 8'h00;
+          tx_buffer[2]         <= 8'h00;
+          tx_buffer[3]         <= 8'h00;
+          tx_buffer[4]         <= 8'h00;
+          tx_buffer[5]         <= 8'h00;
+          tx_buffer[6]         <= 8'h00;
+          tx_buffer[7]         <= 8'h00;
+          tx_buffer[8]         <= 8'h00;
+          tx_buffer[9]         <= 8'h00;
+          tx_buffer[10]        <= 8'h00;
+          tx_buffer[11]        <= 8'h00;
+          tx_buffer[12]        <= 8'h00;
+          tx_buffer[13]        <= 8'h00;
+          tx_buffer[14]        <= 8'h00;
+          tx_buffer[15]        <= 8'h00;
 
-          rx_syn_reg          <= 0;
-          rx_ack_reg          <= 0;
-          tx_ack_reg          <= 0;
-          tx_syn_reg          <= 0;
+          rx_syn_reg           <= 0;
+          rx_ack_reg           <= 0;
+          tx_ack_reg           <= 0;
+          tx_syn_reg           <= 0;
           
           rx_buffer_ptr_reg    <= 4'h0;
-          rx_wr_buffer_ptr_reg <= 4'h0;
-          rx_rd_buffer_ptr_reg <= 4'h0;
-
+          rx_buffer_rd_ptr_reg <= 4'h0;
+          rx_buffer_wr_ptr_reg <= 4'h0;
+          rx_buffer_ctr_reg    <= 4'h0;
 
           tx_buffer_ptr_reg    <= 4'h0;
-          tx_wr_buffer_ptr_reg <= 4'h0;
-          tx_rd_buffer_ptr_reg <= 4'h0;
+          tx_buffer_rd_ptr_reg <= 4'h0;
+          tx_buffer_wr_ptr_reg <= 4'h0;
+          tx_buffer_ctr_reg    <= 4'h0;
 
-          send_response_reg   <= 0;
-          response_sent_reg   <= 0;
+          send_response_reg    <= 0;
+          response_sent_reg    <= 0;
           
-          cmd_reg             <= 8'h00;
-          cmd_available_reg   <= 0;
+          cmd_reg              <= 8'h00;
+          cmd_available_reg    <= 0;
           
-          core_reset_n_reg    <= 1;
-          core_cs_reg         <= 0;
-          core_we_reg         <= 0;
-          core_error_reg      <= 0;
-          core_address_reg    <= 16'h0000;
-          core_write_data_reg <= 32'h00000000;
-          core_read_data_reg  <= 32'h00000000;
+          core_reset_n_reg     <= 1;
+          core_cs_reg          <= 0;
+          core_we_reg          <= 0;
+          core_error_reg       <= 0;
+          core_address_reg     <= 16'h0000;
+          core_write_data_reg  <= 32'h00000000;
+          core_read_data_reg   <= 32'h00000000;
           
-          rx_engine_reg       <= RX_IDLE;
-          tx_engine_reg       <= TX_IDLE;
-          test_engine_reg     <= TEST_IDLE;
+          rx_engine_reg        <= RX_IDLE;
+          tx_engine_reg        <= TX_IDLE;
+          test_engine_reg      <= TEST_IDLE;
         end
       else
         begin
@@ -386,21 +387,41 @@ module coretest(
               rx_buffer_ptr_reg <= rx_buffer_ptr_new;
             end
           
-          if (rx_wr_buffer_ptr_we)
+          if (rx_buffer_rd_ptr_we)
             begin
-              rx_wr_buffer_ptr_reg <= rx_wr_buffer_ptr_new;
+              rx_buffer_rd_ptr_reg <= rx_buffer_rd_ptr_new;
             end
           
-          if (rx_rd_buffer_ptr_we)
+          if (rx_buffer_wr_ptr_we)
             begin
-              rx_rd_buffer_ptr_reg <= rx_rd_buffer_ptr_new;
+              rx_buffer_wr_ptr_reg <= rx_buffer_wr_ptr_new;
+            end
+          
+          if (rx_buffer_ctr_we)
+            begin
+              rx_buffer_ctr_reg <= rx_buffer_ctr_new;
             end
           
           if (tx_buffer_ptr_we)
             begin
               tx_buffer_ptr_reg <= tx_buffer_ptr_new;
             end
-
+          
+          if (tx_buffer_rd_ptr_we)
+            begin
+              tx_buffer_rd_ptr_reg <= tx_buffer_rd_ptr_new;
+            end
+          
+          if (tx_buffer_wr_ptr_we)
+            begin
+              tx_buffer_wr_ptr_reg <= tx_buffer_wr_ptr_new;
+            end
+          
+          if (tx_buffer_ctr_we)
+            begin
+              tx_buffer_ctr_reg <= tx_buffer_ctr_new;
+            end
+          
           if (extract_cmd_fields)
             begin
               cmd_reg             <= rx_buffer[1];
