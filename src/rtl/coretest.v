@@ -103,7 +103,8 @@ module coretest(
   
   // test_engine states.
   parameter TEST_IDLE          = 8'h00;
-  parameter TEST_PARSE_CMD     = 8'h10;
+  parameter TEST_GET_CMD       = 8'h10;
+  parameter TEST_PARSE_CMD     = 8'h11;
   parameter TEST_RST_START     = 8'h30;
   parameter TEST_RST_WAIT      = 8'h31;
   parameter TEST_RST_END       = 8'h32;
@@ -587,17 +588,18 @@ module coretest(
   //----------------------------------------------------------------
   // rx_buffer_rd_ptr
   //
-  // Logic for the rx buffer read pointer. Supports reset and
-  // incremental updates.
+  // Logic for the rx buffer read pointer.
   //----------------------------------------------------------------
   always @*
     begin: rx_buffer_rd_ptr
       // Default assignments
       rx_buffer_rd_ptr_new = 4'h0;
       rx_buffer_rd_ptr_we  = 1'b0;
+      rx_buffer_ctr_dec    = 1;
       
       if (rx_buffer_rd_ptr_inc)
         begin
+          rx_buffer_ctr_dec    = 1;
           rx_buffer_rd_ptr_new = rx_buffer_rd_ptr_reg + 1'b1;
           rx_buffer_rd_ptr_we  = 1'b1;
         end
@@ -607,17 +609,18 @@ module coretest(
   //----------------------------------------------------------------
   // rx_buffer_wr_ptr
   //
-  // Logic for the rx buffer write pointer. Supports reset and
-  // incremental updates.
+  // Logic for the rx buffer write pointer.
   //----------------------------------------------------------------
   always @*
     begin: rx_buffer_wr_ptr
       // Default assignments
       rx_buffer_wr_ptr_new = 4'h0;
       rx_buffer_wr_ptr_we  = 1'b0;
+      rx_buffer_ctr_inc    = 0;
       
       if (rx_buffer_wr_ptr_inc)
         begin
+          rx_buffer_ctr_inc    = 1;
           rx_buffer_wr_ptr_new = rx_buffer_wr_ptr_reg + 1'b1;
           rx_buffer_wr_ptr_we  = 1'b1;
         end
@@ -941,19 +944,28 @@ module coretest(
           begin
             if (!rx_buffer_empty)
               begin
-//                if ()
-//                  begin
-//
-//                  end
-                test_engine_new    = TEST_PARSE_CMD;
-                test_engine_we     = 1;
+                rx_buffer_rd_ptr_inc = 1;
+                if (rx_byte == SOC)
+                  begin
+                    test_engine_new = TEST_GET_CMD;
+                    test_engine_we  = 1;
+                  end
               end
           end
         
+        TEST_GET_CMD:
+          begin
+            if (!rx_buffer_empty)
+              begin
+                rx_buffer_rd_ptr_inc = 1;
+                cmd_we               = 1;
+                test_engine_new      = TEST_PARSE_CMD;
+                test_engine_we       = 1;
+              end
+          end
+
         TEST_PARSE_CMD:
           begin
-            cmd_accepted = 1;
-
             case (cmd_reg)
               RESET_CMD:
                 begin
