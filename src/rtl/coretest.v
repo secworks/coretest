@@ -105,6 +105,12 @@ module coretest(
   parameter TEST_IDLE          = 8'h00;
   parameter TEST_GET_CMD       = 8'h10;
   parameter TEST_PARSE_CMD     = 8'h11;
+  parameter TEST_GET_ADDR0     = 8'h20;
+  parameter TEST_GET_ADDR1     = 8'h21;
+  parameter TEST_GET_DATA0     = 8'h24;
+  parameter TEST_GET_DATA1     = 8'h25;
+  parameter TEST_GET_DATA2     = 8'h26;
+  parameter TEST_GET_DATA3     = 8'h27;
   parameter TEST_RST_START     = 8'h30;
   parameter TEST_RST_WAIT      = 8'h31;
   parameter TEST_RST_END       = 8'h32;
@@ -975,25 +981,109 @@ module coretest(
 
               READ_CMD:
                 begin
-                  test_engine_new = TEST_RD_START;
+                  test_engine_new = TEST_GET_ADDR0;
                   test_engine_we  = 1;
                 end
 
               WRITE_CMD:
                 begin
-                  test_engine_new = TEST_WR_START;
+                  test_engine_new = TEST_GET_ADDR0;
                   test_engine_we  = 1;
                 end
 
               default:
                 begin
-                  // Unknown command.
                   test_engine_new = TEST_CMD_UNKNOWN;
                   test_engine_we  = 1;
                 end
             endcase // case (cmd_reg)
           end
-  
+
+
+        TEST_GET_ADDR0:
+          begin
+            if (!rx_buffer_empty)
+              begin
+                rx_buffer_rd_ptr_inc = 1;
+                core_addr_byte0_we   = 1;
+                test_engine_new      = TEST_GET_ADDR1;
+                test_engine_we       = 1;
+              end
+          end
+
+
+        TEST_GET_ADDR1:
+          begin
+            if (!rx_buffer_empty)
+              begin
+                rx_buffer_rd_ptr_inc = 1;
+                core_addr_byte1_we   = 1;
+
+                case (cmd_reg)
+                  READ_CMD:
+                    begin
+                      test_engine_new = TEST_RD_START;
+                      test_engine_we  = 1;
+                    end
+
+                  WRITE_CMD:
+                    begin
+                      test_engine_new = TEST_GET_DATA0;
+                      test_engine_we  = 1;
+                    end
+                endcase // case (cmd_reg)
+              end
+          end
+
+
+        TEST_GET_DATA0:
+          begin
+            if (!rx_buffer_empty)
+              begin
+                rx_buffer_rd_ptr_inc  = 1;
+                core_wr_data_byte0_we = 1;
+                test_engine_new       = TEST_GET_DATA1;
+                test_engine_we        = 1;
+              end
+          end
+
+
+        TEST_GET_DATA1:
+          begin
+            if (!rx_buffer_empty)
+              begin
+                rx_buffer_rd_ptr_inc  = 1;
+                core_wr_data_byte1_we = 1;
+                test_engine_new       = TEST_GET_DATA2;
+                test_engine_we        = 1;
+              end
+          end
+
+
+        TEST_GET_DATA2:
+          begin
+            if (!rx_buffer_empty)
+              begin
+                rx_buffer_rd_ptr_inc  = 1;
+                core_wr_data_byte2_we = 1;
+                test_engine_new       = TEST_GET_DATA3;
+                test_engine_we        = 1;
+              end
+          end
+
+
+        TEST_GET_DATA3:
+          begin
+            if (!rx_buffer_empty)
+              begin
+                rx_buffer_rd_ptr_inc  = 1;
+                core_wr_data_byte3_we = 1;
+                test_engine_new       = TEST_WR_START;
+                test_engine_we        = 1;
+              end
+          end
+
+
         TEST_RST_START:
           begin
             core_reset_n_new = 0;
@@ -1001,12 +1091,14 @@ module coretest(
             test_engine_new  = TEST_RST_WAIT;
             test_engine_we   = 1;
           end
+
   
         TEST_RST_WAIT:
           begin
             test_engine_new = TEST_RST_END;
             test_engine_we  = 1;
           end
+
 
         TEST_RST_END:
           begin
@@ -1018,6 +1110,7 @@ module coretest(
             test_engine_we   = 1;
           end
 
+
         TEST_RD_START:
           begin
             core_cs_new     = 1;
@@ -1026,12 +1119,14 @@ module coretest(
             test_engine_we  = 1;
           end
 
+
         TEST_RD_WAIT:
           begin
             sample_core_output = 1;
             test_engine_new    = TEST_RD_END;
             test_engine_we     = 1;
           end
+
 
         TEST_RD_END:
           begin
@@ -1053,7 +1148,8 @@ module coretest(
             test_engine_new = TEST_SEND_RESPONSE;
             test_engine_we  = 1;
           end
-        
+
+
         TEST_WR_START:
           begin
             core_cs_new = 1;
@@ -1064,13 +1160,15 @@ module coretest(
             test_engine_new = TEST_WR_WAIT;
             test_engine_we  = 1;
           end
-        
+
+
         TEST_WR_WAIT:
           begin
             sample_core_output = 1;
             test_engine_new  = TEST_WR_END;
             test_engine_we   = 1;
           end
+
 
         TEST_WR_END: 
           begin
@@ -1095,6 +1193,7 @@ module coretest(
             test_engine_we   = 1;
           end
 
+
         TEST_CMD_UNKNOWN:
           begin
             update_tx_buffer = 1;
@@ -1102,6 +1201,7 @@ module coretest(
             test_engine_new  = TEST_SEND_RESPONSE;
             test_engine_we   = 1;
           end
+
 
         TEST_SEND_RESPONSE:
           begin
@@ -1115,6 +1215,7 @@ module coretest(
                 test_engine_we    = 1;
               end
           end
+
         
         default:
           begin
