@@ -166,27 +166,23 @@ module coretest(
   reg [3 : 0]  rx_buffer_ptr_reg;
   reg [3 : 0]  rx_buffer_ptr_new;
   reg          rx_buffer_ptr_we;
-  reg          rx_buffer_ptr_rst;
   reg          rx_buffer_ptr_inc;
 
   reg [3 : 0]  rx_buffer_rd_ptr_reg;
   reg [3 : 0]  rx_buffer_rd_ptr_new;
   reg          rx_buffer_rd_ptr_we;
   reg          rx_buffer_rd_ptr_inc;
-  reg          rx_buffer_rd_ptr_rst;
 
   reg [3 : 0]  rx_buffer_wr_ptr_reg;
   reg [3 : 0]  rx_buffer_wr_ptr_new;
   reg          rx_buffer_wr_ptr_we;
   reg          rx_buffer_wr_ptr_inc;
-  reg          rx_buffer_wr_ptr_rst;
 
   reg [3 : 0]  rx_buffer_ctr_reg;
   reg [3 : 0]  rx_buffer_ctr_new;
   reg          rx_buffer_ctr_we;
   reg          rx_buffer_ctr_inc;
   reg          rx_buffer_ctr_dec;
-  reg          rx_buffer_ctr_rst;
   reg          rx_buffer_full;
   reg          rx_buffer_empty;
   
@@ -196,27 +192,23 @@ module coretest(
   reg [3 : 0]  tx_buffer_ptr_reg;
   reg [3 : 0]  tx_buffer_ptr_new;
   reg          tx_buffer_ptr_we;
-  reg          tx_buffer_ptr_rst;
   reg          tx_buffer_ptr_inc;
 
   reg [3 : 0]  tx_buffer_rd_ptr_reg;
   reg [3 : 0]  tx_buffer_rd_ptr_new;
   reg          tx_buffer_rd_ptr_we;
   reg          tx_buffer_rd_ptr_inc;
-  reg          tx_buffer_rd_ptr_rst;
 
   reg [3 : 0]  tx_buffer_wr_ptr_reg;
   reg [3 : 0]  tx_buffer_wr_ptr_new;
   reg          tx_buffer_wr_ptr_we;
   reg          tx_buffer_wr_ptr_inc;
-  reg          tx_buffer_wr_ptr_rst;
 
   reg [3 : 0]  tx_buffer_ctr_reg;
   reg [3 : 0]  tx_buffer_ctr_new;
   reg          tx_buffer_ctr_we;
   reg          tx_buffer_ctr_inc;
   reg          tx_buffer_ctr_dec;
-  reg          tx_buffer_ctr_rst;
   reg          tx_buffer_full;
   reg          tx_buffer_empty;
 
@@ -589,13 +581,7 @@ module coretest(
       rx_buffer_rd_ptr_new = 4'h0;
       rx_buffer_rd_ptr_we  = 1'b0;
       
-      if (rx_buffer_rd_ptr_rst)
-        begin
-          rx_buffer_rd_ptr_new = 4'h0;
-          rx_buffer_rd_ptr_we  = 1'b1;
-        end
-      
-      else if (rx_buffer_ptr_inc)
+      if (rx_buffer_ptr_inc)
         begin
           rx_buffer_rd_ptr_new = rx_buffer_rd_ptr_reg + 1'b1;
           rx_buffer_rd_ptr_we  = 1'b1;
@@ -615,13 +601,7 @@ module coretest(
       rx_buffer_wr_ptr_new = 4'h0;
       rx_buffer_wr_ptr_we  = 1'b0;
       
-      if (rx_buffer_wr_ptr_rst)
-        begin
-          rx_buffer_wr_ptr_new = 4'h0;
-          rx_buffer_wr_ptr_we  = 1'b1;
-        end
-      
-      else if (rx_buffer_ptr_inc)
+      if (rx_buffer_ptr_inc)
         begin
           rx_buffer_wr_ptr_new = rx_buffer_wr_ptr_reg + 1'b1;
           rx_buffer_wr_ptr_we  = 1'b1;
@@ -642,12 +622,7 @@ module coretest(
       rx_buffer_empty   = 1'b0;
       rx_buffer_full    = 1'b0;
       
-      if (rx_buffer_ctr_rst)
-        begin
-          rx_buffer_ctr_new = 4'h0;
-          rx_buffer_ctr_we  = 1'b1;
-        end
-      else if (rx_buffer_ctr_inc)
+      if (rx_buffer_ctr_inc)
         begin
           rx_buffer_ctr_new = rx_buffer_ctr_reg + 1'b1;
           rx_buffer_ctr_we  = 1'b1;
@@ -682,13 +657,7 @@ module coretest(
       tx_buffer_rd_ptr_new = 4'h0;
       tx_buffer_rd_ptr_we  = 1'b0;
       
-      if (tx_buffer_rd_ptr_rst)
-        begin
-          tx_buffer_rd_ptr_new = 4'h0;
-          tx_buffer_rd_ptr_we  = 1;
-        end
-      
-      else if (tx_buffer_ptr_inc)
+      if (tx_buffer_ptr_inc)
         begin
           tx_buffer_rd_ptr_new = tx_buffer_rd_ptr_reg + 1'b1;
           tx_buffer_rd_ptr_we  = 1;
@@ -708,13 +677,7 @@ module coretest(
       tx_buffer_wr_ptr_new = 4'h0;
       tx_buffer_wr_ptr_we  = 1'b0;
       
-      if (tx_buffer_wr_ptr_rst)
-        begin
-          tx_buffer_wr_ptr_new = 4'h0;
-          tx_buffer_wr_ptr_we  = 1'b1;
-        end
-      
-      else if (tx_buffer_ptr_inc)
+      if (tx_buffer_ptr_inc)
         begin
           tx_buffer_wr_ptr_new = tx_buffer_wr_ptr_reg + 1'b1;
           tx_buffer_wr_ptr_we  = 1'b1;
@@ -735,12 +698,7 @@ module coretest(
       tx_buffer_empty   = 1'b0;
       tx_buffer_full    = 1'b0;
       
-      if (tx_buffer_ctr_rst)
-        begin
-          tx_buffer_ctr_new = 4'h0;
-          tx_buffer_ctr_we  = 1'b1;
-        end
-      else if (tx_buffer_ctr_inc)
+      if (tx_buffer_ctr_inc)
         begin
           tx_buffer_ctr_new = tx_buffer_ctr_reg + 1'b1;
           tx_buffer_ctr_we  = 1'b1;
@@ -775,13 +733,7 @@ module coretest(
       tx_buffer_ptr_new = 4'h0;
       tx_buffer_ptr_we  = 1'b0;
       
-      if (tx_buffer_ptr_rst)
-        begin
-          tx_buffer_ptr_new = 4'h0;
-          tx_buffer_ptr_we  = 1'b1;
-        end
-      
-      else if (tx_buffer_ptr_inc)
+      if (tx_buffer_ptr_inc)
         begin
           tx_buffer_ptr_new = tx_buffer_ptr_reg + 1'b1;
           tx_buffer_ptr_we  = 1'b1;
@@ -854,7 +806,6 @@ module coretest(
   always @*
     begin: tx_engine
       // Default assignments
-      tx_buffer_ptr_rst = 0;
       tx_buffer_ptr_inc = 0;
       response_sent_new = 0;
       response_sent_we  = 0;
@@ -923,7 +874,6 @@ module coretest(
         
         TX_DONE:
           begin
-            tx_buffer_ptr_rst = 1;
             response_sent_new = 0;
             response_sent_we  = 1;
             tx_engine_new     = TX_IDLE;
