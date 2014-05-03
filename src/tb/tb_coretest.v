@@ -263,8 +263,8 @@ module tb_coretest();
       $display("");
 
       $display("Control signals and FSM state:");
-      $display("test_engine_reg = 0x%02x, cmd_reg = 0x%02x, rx_buffer_ptr = 0x%02x, tx_buffer_ptr = 0x%02x",
-               dut.test_engine_reg, dut.cmd_reg, dut.rx_buffer_ptr_reg, dut.tx_buffer_ptr_reg);
+      $display("test_engine_reg = 0x%02x, cmd_reg = 0x%02x, rx_buffer_wr_ptr = 0x%02x, rx_buffer_rd_ptr = 0x%02x, tx_buffer_ptr = 0x%02x",
+               dut.test_engine_reg, dut.cmd_reg, dut.rx_buffer_wr_ptr_reg, dut.rx_buffer_rd_ptr_reg, dut.tx_buffer_ptr_reg);
       $display("");
     end
   endtask // dump_dut_state
