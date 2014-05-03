@@ -206,24 +206,6 @@ module coretest(
   reg          tx_buffer_ptr_we;
   reg          tx_buffer_ptr_inc;
 
-  reg [3 : 0]  tx_buffer_rd_ptr_reg;
-  reg [3 : 0]  tx_buffer_rd_ptr_new;
-  reg          tx_buffer_rd_ptr_we;
-  reg          tx_buffer_rd_ptr_inc;
-
-  reg [3 : 0]  tx_buffer_wr_ptr_reg;
-  reg [3 : 0]  tx_buffer_wr_ptr_new;
-  reg          tx_buffer_wr_ptr_we;
-  reg          tx_buffer_wr_ptr_inc;
-
-  reg [3 : 0]  tx_buffer_ctr_reg;
-  reg [3 : 0]  tx_buffer_ctr_new;
-  reg          tx_buffer_ctr_we;
-  reg          tx_buffer_ctr_inc;
-  reg          tx_buffer_ctr_dec;
-  reg          tx_buffer_full;
-  reg          tx_buffer_empty;
-
   reg [7 : 0]  tx_buffer [0 : 15];
   reg          tx_buffer_we;
   
@@ -331,9 +313,6 @@ module coretest(
           rx_buffer_ctr_reg      <= 4'h0;
 
           tx_buffer_ptr_reg      <= 4'h0;
-          tx_buffer_rd_ptr_reg   <= 4'h0;
-          tx_buffer_wr_ptr_reg   <= 4'h0;
-          tx_buffer_ctr_reg      <= 4'h0;
 
           send_response_reg      <= 0;
           response_sent_reg      <= 0;
@@ -442,21 +421,6 @@ module coretest(
           if (tx_buffer_ptr_we)
             begin
               tx_buffer_ptr_reg <= tx_buffer_ptr_new;
-            end
-          
-          if (tx_buffer_rd_ptr_we)
-            begin
-              tx_buffer_rd_ptr_reg <= tx_buffer_rd_ptr_new;
-            end
-          
-          if (tx_buffer_wr_ptr_we)
-            begin
-              tx_buffer_wr_ptr_reg <= tx_buffer_wr_ptr_new;
-            end
-          
-          if (tx_buffer_ctr_we)
-            begin
-              tx_buffer_ctr_reg <= tx_buffer_ctr_new;
             end
           
           if (core_reset_n_we)
@@ -667,82 +631,6 @@ module coretest(
           rx_buffer_full = 1'b1;
         end
     end // rx_buffer_ctr
-
-  
-  //----------------------------------------------------------------
-  // tx_buffer_rd_ptr
-  //
-  // Logic for the tx buffer read pointer. Supports reset and
-  // incremental updates.
-  //----------------------------------------------------------------
-  always @*
-    begin: tx_buffer_rd_ptr
-      // Default assignments
-      tx_buffer_rd_ptr_new = 4'h0;
-      tx_buffer_rd_ptr_we  = 1'b0;
-      
-      if (tx_buffer_ptr_inc)
-        begin
-          tx_buffer_rd_ptr_new = tx_buffer_rd_ptr_reg + 1'b1;
-          tx_buffer_rd_ptr_we  = 1;
-        end
-    end // tx_buffer_rd_ptr
-
-  
-  //----------------------------------------------------------------
-  // tx_buffer_wr_ptr
-  //
-  // Logic for the tx buffer write pointer. Supports reset and
-  // incremental updates.
-  //----------------------------------------------------------------
-  always @*
-    begin: tx_buffer_wr_ptr
-      // Default assignments
-      tx_buffer_wr_ptr_new = 4'h0;
-      tx_buffer_wr_ptr_we  = 1'b0;
-      
-      if (tx_buffer_ptr_inc)
-        begin
-          tx_buffer_wr_ptr_new = tx_buffer_wr_ptr_reg + 1'b1;
-          tx_buffer_wr_ptr_we  = 1'b1;
-        end
-    end // tx_buffer_wr_ptr
-
-  
-  //----------------------------------------------------------------
-  // tx_buffer_ctr
-  //
-  // Logic for the tx buffer element counter.
-  //----------------------------------------------------------------
-  always @*
-    begin: tx_buffer_ctr
-      // Default assignments
-      tx_buffer_ctr_new = 4'h0;
-      tx_buffer_ctr_we  = 1'b0;
-      tx_buffer_empty   = 1'b0;
-      tx_buffer_full    = 1'b0;
-      
-      if (tx_buffer_ctr_inc)
-        begin
-          tx_buffer_ctr_new = tx_buffer_ctr_reg + 1'b1;
-          tx_buffer_ctr_we  = 1'b1;
-        end
-      else if (tx_buffer_ctr_dec)
-        begin
-          tx_buffer_ctr_new = tx_buffer_ctr_reg - 1'b1;
-          tx_buffer_ctr_we  = 1'b1;
-        end
-
-      if (tx_buffer_ctr_reg == 4'h0)
-        begin
-          tx_buffer_empty = 1'b1;
-        end
-
-      if (tx_buffer_ctr_reg == BUFFER_MAX)
-        begin
-          tx_buffer_full = 1'b1;
-        end
-    end // tx_buffer_ctr
   
   
   //----------------------------------------------------------------
