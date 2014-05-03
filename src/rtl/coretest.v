@@ -236,8 +236,6 @@ module coretest(
   reg [7 : 0] tx_buffert_muxed7;
   reg [7 : 0] tx_buffert_muxed8;
 
-  reg         extract_cmd_fields;
-
   reg         update_tx_buffer;
   reg [7 : 0] response_type;
                 
@@ -403,14 +401,6 @@ module coretest(
           if (tx_buffer_ctr_we)
             begin
               tx_buffer_ctr_reg <= tx_buffer_ctr_new;
-            end
-          
-          if (extract_cmd_fields)
-            begin
-              cmd_reg             <= rx_buffer[1];
-              core_address_reg    <= {rx_buffer[2], rx_buffer[3]};
-              core_write_data_reg <= {rx_buffer[4], rx_buffer[5], 
-                                      rx_buffer[6], rx_buffer[7]};
             end
 
           if (cmd_available_we)
@@ -880,20 +870,20 @@ module coretest(
   always @*
     begin: test_engine
       // Default assignments.
-      core_reset_n_new   = 1;
-      core_reset_n_we    = 0;
-      core_cs_new        = 0;
-      core_cs_we         = 0;
-      core_we_new        = 0;
-      core_we_we         = 0;
-      extract_cmd_fields = 0;
-      sample_core_output = 0;
-      update_tx_buffer   = 0;
-      response_type      = 8'h00;
-      send_response_new  = 0;
-      send_response_we   = 0;
-      test_engine_new    = TEST_IDLE;
-      test_engine_we     = 0;
+      core_reset_n_new     = 1;
+      core_reset_n_we      = 0;
+      core_cs_new          = 0;
+      core_cs_we           = 0;
+      core_we_new          = 0;
+      core_we_we           = 0;
+      sample_core_output   = 0;
+      update_tx_buffer     = 0;
+      response_type        = 8'h00;
+      rx_buffer_rd_ptr_inc = 0;
+      send_response_new    = 0;
+      send_response_we     = 0;
+      test_engine_new      = TEST_IDLE;
+      test_engine_we       = 0;
       
       case (test_engine_reg)
         TEST_IDLE:
@@ -904,7 +894,6 @@ module coretest(
 //                  begin
 //
 //                  end
-                extract_cmd_fields = 1;
                 test_engine_new    = TEST_PARSE_CMD;
                 test_engine_we     = 1;
               end
