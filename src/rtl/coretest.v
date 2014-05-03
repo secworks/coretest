@@ -114,7 +114,7 @@ module coretest(
   parameter TEST_WR_START      = 8'h60;
   parameter TEST_WR_WAIT       = 8'h61;
   parameter TEST_WR_END        = 8'h62;
-  parameter TEST_UNKNOWN       = 8'h80;
+  parameter TEST_CMD_UNKNOWN   = 8'h80;
   parameter TEST_SEND_RESPONSE = 8'hc0;
   
   
@@ -988,7 +988,7 @@ module coretest(
               default:
                 begin
                   // Unknown command.
-                  test_engine_new = TEST_UNKNOWN;
+                  test_engine_new = TEST_CMD_UNKNOWN;
                   test_engine_we  = 1;
                 end
             endcase // case (cmd_reg)
@@ -1095,7 +1095,7 @@ module coretest(
             test_engine_we   = 1;
           end
 
-        TEST_UNKNOWN:
+        TEST_CMD_UNKNOWN:
           begin
             update_tx_buffer = 1;
             response_type    = UNKNOWN;
