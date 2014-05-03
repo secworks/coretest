@@ -144,10 +144,6 @@ module coretest(
   reg          core_we_new;
   reg          core_we_we;
 
-  reg          cmd_available_reg;
-  reg          cmd_available_new;
-  reg          cmd_available_we;
-
   reg          send_response_reg;
   reg          send_response_new;
   reg          send_response_we;
@@ -157,8 +153,22 @@ module coretest(
   reg          response_sent_we;
   
   reg [7 : 0]  cmd_reg;
-  reg [15 : 0] core_address_reg;
-  reg [31 : 0] core_write_data_reg;
+  reg [7 : 0]  cmd_we;
+  
+  reg [7 : 0]  core_addr_byte0_reg;
+  reg          core_addr_byte0_we;
+  reg [7 : 0]  core_addr_byte1_reg;
+  reg          core_addr_byte1_we;
+  
+  reg [7 : 0]  core_wr_data_byte0_reg;
+  reg          core_wr_data_byte0_we;
+  reg [7 : 0]  core_wr_data_byte1_reg;
+  reg          core_wr_data_byte1_we;
+  reg [7 : 0]  core_wr_data_byte2_reg;
+  reg          core_wr_data_byte2_we;
+  reg [7 : 0]  core_wr_data_byte3_reg;
+  reg          core_wr_data_byte3_we;
+
   reg [31 : 0] core_read_data_reg;
   reg          core_error_reg;
   reg          sample_core_output;
@@ -255,8 +265,9 @@ module coretest(
   assign core_reset_n    = core_reset_n_reg & reset_n;
   assign core_cs         = core_cs_reg;
   assign core_we         = core_we_reg;
-  assign core_address    = core_address_reg;
-  assign core_write_data = core_write_data_reg;
+  assign core_address    = {core_addr_byte0_reg, core_addr_byte1_reg};
+  assign core_write_data = {core_wr_data_byte0_reg, core_wr_data_byte1_reg, 
+                            core_wr_data_byte2_reg, core_wr_data_byte3_reg};
   
   
   //----------------------------------------------------------------
@@ -269,71 +280,73 @@ module coretest(
     begin: reg_update
       if (!reset_n)
         begin
-          rx_buffer[0]         <= 8'h00;
-          rx_buffer[1]         <= 8'h00;
-          rx_buffer[2]         <= 8'h00;
-          rx_buffer[3]         <= 8'h00;
-          rx_buffer[4]         <= 8'h00;
-          rx_buffer[5]         <= 8'h00;
-          rx_buffer[6]         <= 8'h00;
-          rx_buffer[7]         <= 8'h00;
-          rx_buffer[8]         <= 8'h00;
-          rx_buffer[9]         <= 8'h00;
-          rx_buffer[10]        <= 8'h00;
-          rx_buffer[11]        <= 8'h00;
-          rx_buffer[12]        <= 8'h00;
-          rx_buffer[13]        <= 8'h00;
-          rx_buffer[14]        <= 8'h00;
-          rx_buffer[15]        <= 8'h00;
+          rx_buffer[0]           <= 8'h00;
+          rx_buffer[1]           <= 8'h00;
+          rx_buffer[2]           <= 8'h00;
+          rx_buffer[3]           <= 8'h00;
+          rx_buffer[4]           <= 8'h00;
+          rx_buffer[5]           <= 8'h00;
+          rx_buffer[6]           <= 8'h00;
+          rx_buffer[7]           <= 8'h00;
+          rx_buffer[8]           <= 8'h00;
+          rx_buffer[9]           <= 8'h00;
+          rx_buffer[10]          <= 8'h00;
+          rx_buffer[11]          <= 8'h00;
+          rx_buffer[12]          <= 8'h00;
+          rx_buffer[13]          <= 8'h00;
+          rx_buffer[14]          <= 8'h00;
+          rx_buffer[15]          <= 8'h00;
           
-          tx_buffer[0]         <= 8'h00;
-          tx_buffer[1]         <= 8'h00;
-          tx_buffer[2]         <= 8'h00;
-          tx_buffer[3]         <= 8'h00;
-          tx_buffer[4]         <= 8'h00;
-          tx_buffer[5]         <= 8'h00;
-          tx_buffer[6]         <= 8'h00;
-          tx_buffer[7]         <= 8'h00;
-          tx_buffer[8]         <= 8'h00;
-          tx_buffer[9]         <= 8'h00;
-          tx_buffer[10]        <= 8'h00;
-          tx_buffer[11]        <= 8'h00;
-          tx_buffer[12]        <= 8'h00;
-          tx_buffer[13]        <= 8'h00;
-          tx_buffer[14]        <= 8'h00;
-          tx_buffer[15]        <= 8'h00;
+          tx_buffer[0]           <= 8'h00;
+          tx_buffer[1]           <= 8'h00;
+          tx_buffer[2]           <= 8'h00;
+          tx_buffer[3]           <= 8'h00;
+          tx_buffer[4]           <= 8'h00;
+          tx_buffer[5]           <= 8'h00;
+          tx_buffer[6]           <= 8'h00;
+          tx_buffer[7]           <= 8'h00;
+          tx_buffer[8]           <= 8'h00;
+          tx_buffer[9]           <= 8'h00;
+          tx_buffer[10]          <= 8'h00;
+          tx_buffer[11]          <= 8'h00;
+          tx_buffer[12]          <= 8'h00;
+          tx_buffer[13]          <= 8'h00;
+          tx_buffer[14]          <= 8'h00;
+          tx_buffer[15]          <= 8'h00;
 
-          rx_syn_reg           <= 0;
-          rx_ack_reg           <= 0;
-          tx_ack_reg           <= 0;
-          tx_syn_reg           <= 0;
+          rx_syn_reg             <= 0;
+          rx_ack_reg             <= 0;
+          tx_ack_reg             <= 0;
+          tx_syn_reg             <= 0;
           
-          rx_buffer_rd_ptr_reg <= 4'h0;
-          rx_buffer_wr_ptr_reg <= 4'h0;
-          rx_buffer_ctr_reg    <= 4'h0;
+          rx_buffer_rd_ptr_reg   <= 4'h0;
+          rx_buffer_wr_ptr_reg   <= 4'h0;
+          rx_buffer_ctr_reg      <= 4'h0;
 
-          tx_buffer_ptr_reg    <= 4'h0;
-          tx_buffer_rd_ptr_reg <= 4'h0;
-          tx_buffer_wr_ptr_reg <= 4'h0;
-          tx_buffer_ctr_reg    <= 4'h0;
+          tx_buffer_ptr_reg      <= 4'h0;
+          tx_buffer_rd_ptr_reg   <= 4'h0;
+          tx_buffer_wr_ptr_reg   <= 4'h0;
+          tx_buffer_ctr_reg      <= 4'h0;
 
-          send_response_reg    <= 0;
-          response_sent_reg    <= 0;
+          send_response_reg      <= 0;
+          response_sent_reg      <= 0;
           
-          cmd_reg              <= 8'h00;
-          cmd_available_reg    <= 0;
+          cmd_reg                <= 8'h00;
+          core_addr_byte0_reg    <= 8'h00;
+          core_addr_byte1_reg    <= 8'h00;
+          core_wr_data_byte0_reg <= 8'h00;
           
-          core_reset_n_reg     <= 1;
-          core_cs_reg          <= 0;
-          core_we_reg          <= 0;
-          core_error_reg       <= 0;
-          core_address_reg     <= 16'h0000;
-          core_write_data_reg  <= 32'h00000000;
-          core_read_data_reg   <= 32'h00000000;
+          core_reset_n_reg       <= 1;
+          core_cs_reg            <= 0;
+          core_we_reg            <= 0;
+          core_error_reg         <= 0;
+          core_address_reg       <= 16'h0000;
+          core_write_data_reg    <= 32'h00000000;
+          core_read_data_reg     <= 32'h00000000;
           
-          rx_engine_reg        <= RX_IDLE;
-          tx_engine_reg        <= TX_IDLE;
-          test_engine_reg      <= TEST_IDLE;
+          rx_engine_reg          <= RX_IDLE;
+          tx_engine_reg          <= TX_IDLE;
+          test_engine_reg        <= TEST_IDLE;
         end
       else
         begin
@@ -367,6 +380,41 @@ module coretest(
               tx_buffer[7] <= tx_buffert_muxed7;
               tx_buffer[8] <= tx_buffert_muxed8;
             end 
+
+          if (cmd_we)
+            begin
+              cmd_reg <= rx_byte;
+            end
+
+          if (core_addr_byte0_we)
+            begin
+              core_addr_byte0_reg <= rx_byte;
+            end
+
+          if (core_addr_byte1_we)
+            begin
+              core_addr_byte1_reg <= rx_byte;
+            end
+
+          if (core_wr_data_byte0_we)
+            begin
+              core_wr_data_byte0_reg <= rx_byte;
+            end
+
+          if (core_wr_data_byte1_we)
+            begin
+              core_wr_data_byte1_reg <= rx_byte;
+            end
+
+          if (core_wr_data_byte2_we)
+            begin
+              core_wr_data_byte2_reg <= rx_byte;
+            end
+
+          if (core_wr_data_byte3_we)
+            begin
+              core_wr_data_byte3_reg <= rx_byte;
+            end
           
           if (rx_buffer_rd_ptr_we)
             begin
@@ -870,20 +918,27 @@ module coretest(
   always @*
     begin: test_engine
       // Default assignments.
-      core_reset_n_new     = 1;
-      core_reset_n_we      = 0;
-      core_cs_new          = 0;
-      core_cs_we           = 0;
-      core_we_new          = 0;
-      core_we_we           = 0;
-      sample_core_output   = 0;
-      update_tx_buffer     = 0;
-      response_type        = 8'h00;
-      rx_buffer_rd_ptr_inc = 0;
-      send_response_new    = 0;
-      send_response_we     = 0;
-      test_engine_new      = TEST_IDLE;
-      test_engine_we       = 0;
+      core_reset_n_new      = 1;
+      core_reset_n_we       = 0;
+      core_cs_new           = 0;
+      core_cs_we            = 0;
+      core_we_new           = 0;
+      core_we_we            = 0;
+      sample_core_output    = 0;
+      update_tx_buffer      = 0;
+      response_type         = 8'h00;
+      rx_buffer_rd_ptr_inc  = 0;
+      cmd_we                = 0;
+      core_addr_byte0_we    = 0;
+      core_addr_byte1_we    = 0;
+      core_wr_data_byte0_we = 0;
+      core_wr_data_byte1_we = 0;
+      core_wr_data_byte2_we = 0;
+      core_wr_data_byte3_we = 0;
+      send_response_new     = 0;
+      send_response_we      = 0;
+      test_engine_new       = TEST_IDLE;
+      test_engine_we        = 0;
       
       case (test_engine_reg)
         TEST_IDLE:
