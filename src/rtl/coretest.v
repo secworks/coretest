@@ -162,11 +162,6 @@ module coretest(
   reg [31 : 0] core_read_data_reg;
   reg          core_error_reg;
   reg          sample_core_output;
-  
-  reg [3 : 0]  rx_buffer_ptr_reg;
-  reg [3 : 0]  rx_buffer_ptr_new;
-  reg          rx_buffer_ptr_we;
-  reg          rx_buffer_ptr_inc;
 
   reg [3 : 0]  rx_buffer_rd_ptr_reg;
   reg [3 : 0]  rx_buffer_rd_ptr_new;
@@ -241,12 +236,14 @@ module coretest(
   reg [7 : 0] tx_buffert_muxed7;
   reg [7 : 0] tx_buffert_muxed8;
 
-  reg extract_cmd_fields;
+  reg         extract_cmd_fields;
 
   reg         update_tx_buffer;
   reg [7 : 0] response_type;
                 
-  reg          cmd_accepted;
+  reg         cmd_accepted;
+
+  reg [7 : 0] rx_byte;
   
   
   //----------------------------------------------------------------
@@ -313,7 +310,6 @@ module coretest(
           tx_ack_reg           <= 0;
           tx_syn_reg           <= 0;
           
-          rx_buffer_ptr_reg    <= 4'h0;
           rx_buffer_rd_ptr_reg <= 4'h0;
           rx_buffer_wr_ptr_reg <= 4'h0;
           rx_buffer_ctr_reg    <= 4'h0;
@@ -358,7 +354,7 @@ module coretest(
           
           if (rx_buffer_we)
             begin
-              rx_buffer[rx_buffer_ptr_reg] <= rx_data;
+              rx_buffer[rx_buffer_wr_ptr_reg] <= rx_data;
             end
           
           if (tx_buffer_we)
@@ -373,11 +369,6 @@ module coretest(
               tx_buffer[7] <= tx_buffert_muxed7;
               tx_buffer[8] <= tx_buffert_muxed8;
             end 
-          
-          if (rx_buffer_ptr_we)
-            begin
-              rx_buffer_ptr_reg <= rx_buffer_ptr_new;
-            end
           
           if (rx_buffer_rd_ptr_we)
             begin
@@ -475,6 +466,16 @@ module coretest(
         end
     end // reg_update
 
+
+  //---------------------------------------------------------------
+  // read_rx_buffer
+  // Combinatinal read mux for the rx_buffer.
+  //---------------------------------------------------------------
+  always @*
+    begin : read_rx_buffer
+      rx_byte = rx_buffer[rx_buffer_rd_ptr_reg];
+    end // read_rx_buffer
+  
   
   //---------------------------------------------------------------
   // tx_buffer_logic
@@ -550,26 +551,6 @@ module coretest(
 
   
   //----------------------------------------------------------------
-  // rx_buffer_ptr
-  //
-  // Logic for the rx buffer pointer. Supports reset and
-  // incremental updates.
-  //----------------------------------------------------------------
-  always @*
-    begin: rx_buffer_ptr
-      // Default assignments
-      rx_buffer_ptr_new = 4'h0;
-      rx_buffer_ptr_we  = 1'b0;
-      
-      if (rx_buffer_ptr_inc)
-        begin
-          rx_buffer_ptr_new = rx_buffer_ptr_reg + 1'b1;
-          rx_buffer_ptr_we  = 1'b1;
-        end
-    end // rx_buffer_ptr
-
-  
-  //----------------------------------------------------------------
   // rx_buffer_rd_ptr
   //
   // Logic for the rx buffer read pointer. Supports reset and
@@ -581,7 +562,7 @@ module coretest(
       rx_buffer_rd_ptr_new = 4'h0;
       rx_buffer_rd_ptr_we  = 1'b0;
       
-      if (rx_buffer_ptr_inc)
+      if (rx_buffer_rd_ptr_inc)
         begin
           rx_buffer_rd_ptr_new = rx_buffer_rd_ptr_reg + 1'b1;
           rx_buffer_rd_ptr_we  = 1'b1;
@@ -601,7 +582,7 @@ module coretest(
       rx_buffer_wr_ptr_new = 4'h0;
       rx_buffer_wr_ptr_we  = 1'b0;
       
-      if (rx_buffer_ptr_inc)
+      if (rx_buffer_wr_ptr_inc)
         begin
           rx_buffer_wr_ptr_new = rx_buffer_wr_ptr_reg + 1'b1;
           rx_buffer_wr_ptr_we  = 1'b1;
@@ -750,12 +731,12 @@ module coretest(
   always @*
     begin: rx_engine
       // Default assignments
-      rx_ack_new        = 1'b0;
-      rx_ack_we         = 1'b0;
-      rx_buffer_we      = 1'b0;
-      rx_buffer_ptr_inc = 1'b0;
-      rx_engine_new     = RX_IDLE;
-      rx_engine_we      = 1'b0;
+      rx_ack_new           = 1'b0;
+      rx_ack_we            = 1'b0;
+      rx_buffer_we         = 1'b0;
+      rx_buffer_wr_ptr_inc = 1'b0;
+      rx_engine_new        = RX_IDLE;
+      rx_engine_we         = 1'b0;
       
       case (rx_engine_reg)
         RX_IDLE:
@@ -773,11 +754,11 @@ module coretest(
         
         RX_ACK:
           begin
-            rx_ack_new        = 1'b1;
-            rx_ack_we         = 1'b1;
-            rx_buffer_ptr_inc = 1'b1;
-            rx_engine_new     = RX_NSYN;
-            rx_engine_we      = 1'b1;
+            rx_ack_new           = 1'b1;
+            rx_ack_we            = 1'b1;
+            rx_buffer_wr_ptr_inc = 1'b1;
+            rx_engine_new        = RX_NSYN;
+            rx_engine_we         = 1'b1;
           end
 
         RX_NSYN:
@@ -905,7 +886,6 @@ module coretest(
       core_cs_we         = 0;
       core_we_new        = 0;
       core_we_we         = 0;
-      cmd_accepted       = 0;
       extract_cmd_fields = 0;
       sample_core_output = 0;
       update_tx_buffer   = 0;
@@ -918,8 +898,12 @@ module coretest(
       case (test_engine_reg)
         TEST_IDLE:
           begin
-            if (cmd_available_reg)
+            if (!rx_buffer_empty)
               begin
+//                if ()
+//                  begin
+//
+//                  end
                 extract_cmd_fields = 1;
                 test_engine_new    = TEST_PARSE_CMD;
                 test_engine_we     = 1;
