@@ -569,13 +569,7 @@ module coretest(
       rx_buffer_ptr_new = 4'h0;
       rx_buffer_ptr_we  = 1'b0;
       
-      if (rx_buffer_ptr_rst)
-        begin
-          rx_buffer_ptr_new = 4'h0;
-          rx_buffer_ptr_we  = 1'b1;
-        end
-      
-      else if (rx_buffer_ptr_inc)
+      if (rx_buffer_ptr_inc)
         begin
           rx_buffer_ptr_new = rx_buffer_ptr_reg + 1'b1;
           rx_buffer_ptr_we  = 1'b1;
@@ -590,7 +584,7 @@ module coretest(
   // incremental updates.
   //----------------------------------------------------------------
   always @*
-    begin: rx_buffer_rd_ ptr
+    begin: rx_buffer_rd_ptr
       // Default assignments
       rx_buffer_rd_ptr_new = 4'h0;
       rx_buffer_rd_ptr_we  = 1'b0;
@@ -683,7 +677,7 @@ module coretest(
   // incremental updates.
   //----------------------------------------------------------------
   always @*
-    begin: tx_buffer_rd_ ptr
+    begin: tx_buffer_rd_ptr
       // Default assignments
       tx_buffer_rd_ptr_new = 4'h0;
       tx_buffer_rd_ptr_we  = 1'b0;
@@ -799,8 +793,7 @@ module coretest(
   // rx_engine
   //
   // FSM responsible for handling receiving message bytes from the
-  // host interface and signalling the test engine that there is
-  // a new command to be executed.
+  // host interface and storing them in the receive buffer.
   //----------------------------------------------------------------
   always @*
     begin: rx_engine
@@ -808,10 +801,7 @@ module coretest(
       rx_ack_new        = 1'b0;
       rx_ack_we         = 1'b0;
       rx_buffer_we      = 1'b0;
-      rx_buffer_ptr_rst = 1'b0;
       rx_buffer_ptr_inc = 1'b0;
-      cmd_available_new = 1'b0;
-      cmd_available_we  = 1'b0;
       rx_engine_new     = RX_IDLE;
       rx_engine_we      = 1'b0;
       
@@ -820,73 +810,36 @@ module coretest(
           begin
             if (rx_syn_reg)
               begin
-                rx_buffer_we  = 1;
-                rx_engine_new = RX_ACK;
-                rx_engine_we  = 1;
+                if (!rx_buffer_full)
+                  begin
+                    rx_buffer_we  = 1'b1;
+                    rx_engine_new = RX_ACK;
+                    rx_engine_we  = 1'b1;
+                  end
               end
           end
-
         
         RX_ACK:
           begin
-            rx_ack_new = 1;
-            rx_ack_we  = 1;
-            rx_engine_new = RX_NSYN;
-            rx_engine_we  = 1;
+            rx_ack_new        = 1'b1;
+            rx_ack_we         = 1'b1;
+            rx_buffer_ptr_inc = 1'b1;
+            rx_engine_new     = RX_NSYN;
+            rx_engine_we      = 1'b1;
           end
-
 
         RX_NSYN:
           begin
             if (!rx_syn_reg)
               begin
-                rx_engine_new = RX_PARSE;
+                rx_engine_new = RX_IDLE;
                 rx_engine_we  = 1;
               end
           end
 
-
-        RX_PARSE:
-          begin
-            rx_ack_new = 0;
-            rx_ack_we  = 1;
-            if (rx_buffer[rx_buffer_ptr_reg] == EOC)
-              begin
-                rx_engine_new = RX_DONE;
-                rx_engine_we  = 1;
-              end
-            else
-              begin
-                rx_buffer_ptr_inc = 1;
-                rx_engine_new     = RX_IDLE;
-                rx_engine_we      = 1;
-              end
-          end
-
-
-        RX_DONE:
-          begin
-            cmd_available_new = 1;
-            cmd_available_we  = 1;
-            rx_engine_new     = RX_CMD;
-            rx_engine_we      = 1;
-          end
-
-        RX_CMD:
-            if (cmd_accepted)
-              begin
-                cmd_available_new = 0;
-                cmd_available_we  = 1;
-                rx_buffer_ptr_rst = 1;
-                rx_engine_new     = RX_IDLE;
-                rx_engine_we      = 1;
-              end
-        
         default:
           begin
-            rx_buffer_ptr_rst = 1;
-            rx_engine_new     = RX_IDLE;
-            rx_engine_we      = 1;
+
           end
       endcase // case (rx_engine_reg)
     end // rx_engine
