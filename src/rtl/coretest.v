@@ -565,7 +565,7 @@ module coretest(
       // Default assignments
       rx_buffer_rd_ptr_new = 4'h0;
       rx_buffer_rd_ptr_we  = 1'b0;
-      rx_buffer_ctr_dec    = 1;
+      rx_buffer_ctr_dec    = 0;
       
       if (rx_buffer_rd_ptr_inc)
         begin
