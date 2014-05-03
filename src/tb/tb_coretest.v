@@ -47,7 +47,7 @@ module tb_coretest();
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter DEBUG           = 0;
+  parameter DEBUG           = 1;
   parameter VERBOSE         = 0;
   parameter CMD_MONITOR     = 1;
   
@@ -151,6 +151,7 @@ module tb_coretest();
       #(CLK_PERIOD);      
       if (DEBUG)
         begin
+          dump_dut_state();
           $display("");
         end
 
@@ -262,9 +263,14 @@ module tb_coretest();
                dut.core_cs, dut.core_we, dut.core_address, dut.core_write_data, dut.core_read_data, dut.core_error);
       $display("");
 
+      $display("RX chain signals:");
+      $display("rx_buffer_wr_ptr = 0x%02x, rx_buffer_rd_ptr = 0x%02x, rx_buffer_ctr = 0x%02x, rx_buffer_empty = 0x%01x,  rx_buffer_full = 0x%01x",
+               dut.rx_buffer_wr_ptr_reg, dut.rx_buffer_rd_ptr_reg,  dut.rx_buffer_ctr_reg, dut.rx_buffer_empty, dut.rx_buffer_full);
+      $display("");
+
       $display("Control signals and FSM state:");
-      $display("test_engine_reg = 0x%02x, cmd_reg = 0x%02x, rx_buffer_wr_ptr = 0x%02x, rx_buffer_rd_ptr = 0x%02x, tx_buffer_ptr = 0x%02x",
-               dut.test_engine_reg, dut.cmd_reg, dut.rx_buffer_wr_ptr_reg, dut.rx_buffer_rd_ptr_reg, dut.tx_buffer_ptr_reg);
+      $display("test_engine_reg = 0x%02x, cmd_reg = 0x%02x",
+               dut.test_engine_reg, dut.cmd_reg);
       $display("");
     end
   endtask // dump_dut_state
