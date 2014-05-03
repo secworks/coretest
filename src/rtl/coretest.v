@@ -335,13 +335,14 @@ module coretest(
           core_addr_byte0_reg    <= 8'h00;
           core_addr_byte1_reg    <= 8'h00;
           core_wr_data_byte0_reg <= 8'h00;
+          core_wr_data_byte1_reg <= 8'h00;
+          core_wr_data_byte2_reg <= 8'h00;
+          core_wr_data_byte3_reg <= 8'h00;
           
           core_reset_n_reg       <= 1;
           core_cs_reg            <= 0;
           core_we_reg            <= 0;
           core_error_reg         <= 0;
-          core_address_reg       <= 16'h0000;
-          core_write_data_reg    <= 32'h00000000;
           core_read_data_reg     <= 32'h00000000;
           
           rx_engine_reg          <= RX_IDLE;
@@ -450,11 +451,6 @@ module coretest(
             begin
               tx_buffer_ctr_reg <= tx_buffer_ctr_new;
             end
-
-          if (cmd_available_we)
-            begin
-              cmd_available_reg <= cmd_available_new;
-            end
           
           if (core_reset_n_we)
             begin
@@ -546,8 +542,8 @@ module coretest(
             READ_OK:
               begin
                 tx_buffert_muxed1 = READ_OK;
-                tx_buffert_muxed2 = core_address_reg[15 : 8];
-                tx_buffert_muxed3 = core_address_reg[7  : 0];
+                tx_buffert_muxed2 = core_addr_byte0_reg;
+                tx_buffert_muxed3 = core_addr_byte1_reg;
                 tx_buffert_muxed4 = core_read_data_reg[31 : 24];
                 tx_buffert_muxed5 = core_read_data_reg[23 : 16];
                 tx_buffert_muxed6 = core_read_data_reg[15 :  8];
@@ -558,8 +554,8 @@ module coretest(
             WRITE_OK:
               begin
                 tx_buffert_muxed1 = WRITE_OK;
-                tx_buffert_muxed2 = core_address_reg[15 : 8];
-                tx_buffert_muxed3 = core_address_reg[7  : 0];
+                tx_buffert_muxed2 = core_addr_byte0_reg;
+                tx_buffert_muxed3 = core_addr_byte1_reg;
                 tx_buffert_muxed4 = EOR;
               end
 
