@@ -57,7 +57,7 @@ module tb_coretest();
   // Command and response constants.
   parameter SOC       = 8'h55;
   parameter EOC       = 8'haa;
-  parameter RESET_CMD = 8'h01; 
+  parameter RESET_CMD = 8'h01;
   parameter READ_CMD  = 8'h10; 
   parameter WRITE_CMD = 8'h11; 
 
