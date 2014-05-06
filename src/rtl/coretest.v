@@ -87,11 +87,7 @@ module coretest(
   // rx_engine states.
   parameter RX_IDLE  = 3'h0;
   parameter RX_SYN   = 3'h1;
-  parameter RX_ACK   = 3'h2;
-  parameter RX_NSYN  = 3'h4;
-  parameter RX_PARSE = 3'h5;
-  parameter RX_CMD   = 3'h6;
-  parameter RX_DONE  = 3'h7;
+  parameter RX_NSYN  = 3'h2;
 
   // tx_engine states.
   parameter TX_IDLE  = 3'h0;
