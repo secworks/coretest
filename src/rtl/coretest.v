@@ -235,8 +235,6 @@ module coretest(
 
   reg         update_tx_buffer;
   reg [7 : 0] response_type;
-                
-  reg         cmd_accepted;
 
   reg [7 : 0] rx_byte;
   
