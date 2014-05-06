@@ -197,6 +197,29 @@ module tb_coretest();
 
 
   //----------------------------------------------------------------
+  // receive_logic
+  //
+  // The logic needed to the correct handshake expected by the DUT
+  // when it is sending bytes.
+  //----------------------------------------------------------------
+  always @ (posedge tb_clk)
+    begin : receive_logic
+      if (tb_tx_syn)
+        begin
+          if (VERBOSE)
+            begin
+              $display("Receiving byte 0x%02x from the DUT.", tb_tx_data);
+            end
+          #(2 * CLK_PERIOD);
+          tb_tx_ack = 1;
+
+          #(2 * CLK_PERIOD);
+          tb_tx_ack = 0;
+        end
+    end // receive_logic
+
+
+  //----------------------------------------------------------------
   // test_mem_logic
   //
   // The logic needed to implement the test memory. We basically
