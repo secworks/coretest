@@ -47,7 +47,7 @@ module tb_coretest();
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter DEBUG           = 1;
+  parameter DEBUG           = 0;
   parameter VERBOSE         = 0;
   parameter CMD_MONITOR     = 1;
   
@@ -178,7 +178,8 @@ module tb_coretest();
             begin
               $display("Core is being reset by coretest.");
             end
-          else if (tb_core_cs)
+
+          if (tb_core_cs)
             begin
               if (tb_core_we)
                 begin
