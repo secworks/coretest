@@ -203,6 +203,7 @@ module coretest(
   reg [3 : 0]  tx_buffer_ptr_new;
   reg          tx_buffer_ptr_we;
   reg          tx_buffer_ptr_inc;
+  reg          tx_buffer_ptr_rst;
 
   reg [7 : 0]  tx_buffer [0 : 15];
   reg          tx_buffer_we;
@@ -667,6 +668,12 @@ module coretest(
           tx_buffer_ptr_new = tx_buffer_ptr_reg + 1'b1;
           tx_buffer_ptr_we  = 1'b1;
         end
+
+      else if (tx_buffer_ptr_rst)
+        begin
+          tx_buffer_ptr_new = 4'h0;
+          tx_buffer_ptr_we  = 1'b1;
+        end
     end // tx_buffer_ptr
   
 
@@ -738,6 +745,7 @@ module coretest(
     begin: tx_engine
       // Default assignments
       tx_buffer_ptr_inc = 0;
+      tx_buffer_ptr_rst = 0;
       response_sent_new = 0;
       response_sent_we  = 0;
       tx_syn_new        = 0;
@@ -807,6 +815,7 @@ module coretest(
           begin
             response_sent_new = 0;
             response_sent_we  = 1;
+            tx_buffer_ptr_rst = 1;
             tx_engine_new     = TX_IDLE;
             tx_engine_we      = 1;
           end
