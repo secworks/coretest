@@ -468,7 +468,7 @@ module tb_coretest();
       send_read_command(16'haa55);
 
       send_write_command(16'h4224, 32'h1337beef);
-      send_write_command(16'h455aa, 32'h55aa55aa);
+      send_write_command(16'h455a, 32'h55aa55aa);
 
       #(200 * CLK_PERIOD);
 
