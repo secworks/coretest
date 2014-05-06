@@ -698,6 +698,8 @@ module coretest(
           begin
             if (!rx_syn_reg)
               begin
+                rx_ack_new    = 1'b0;
+                rx_ack_we     = 1'b1;
                 rx_engine_new = RX_IDLE;
                 rx_engine_we  = 1;
               end
