@@ -206,6 +206,10 @@ module coretest(
 
   reg [7 : 0]  tx_buffer [0 : 15];
   reg          tx_buffer_we;
+
+  reg [3 : 0]  tx_msg_len_reg;
+  reg [3 : 0]  tx_msg_len_new;
+  reg          tx_msg_len_we;
   
   reg [2 : 0]  rx_engine_reg;
   reg [2 : 0]  rx_engine_new;
@@ -309,6 +313,7 @@ module coretest(
           rx_buffer_ctr_reg      <= 4'h0;
 
           tx_buffer_ptr_reg      <= 4'h0;
+          tx_msg_len_reg         <= 4'h0;
 
           send_response_reg      <= 0;
           response_sent_reg      <= 0;
@@ -418,6 +423,11 @@ module coretest(
             begin
               tx_buffer_ptr_reg <= tx_buffer_ptr_new;
             end
+
+          if (tx_msg_len_we)
+            begin
+              tx_msg_len_reg <= tx_msg_len_new;
+            end
           
           if (core_reset_n_we)
             begin
@@ -497,8 +507,9 @@ module coretest(
       tx_buffer_muxed6 = 8'h00;
       tx_buffer_muxed7 = 8'h00;
       tx_buffer_muxed8 = 8'h00;
-
-      tx_buffer_we      = 0;
+      tx_msg_len_new   = 4'h0;
+      tx_msg_len_we    = 0;
+      tx_buffer_we     = 0;
 
       if (update_tx_buffer)
         begin
@@ -516,6 +527,8 @@ module coretest(
                 tx_buffer_muxed6 = core_read_data_reg[15 :  8];
                 tx_buffer_muxed7 = core_read_data_reg[7  :  0];
                 tx_buffer_muxed8 = EOR;
+                tx_msg_len_new   = 4'h9;
+                tx_msg_len_we    = 1;
               end
 
             WRITE_OK:
@@ -524,12 +537,16 @@ module coretest(
                 tx_buffer_muxed2 = core_addr_byte0_reg;
                 tx_buffer_muxed3 = core_addr_byte1_reg;
                 tx_buffer_muxed4 = EOR;
+                tx_msg_len_new   = 4'h5;
+                tx_msg_len_we    = 1;
               end
 
             RESET_OK:
               begin
                 tx_buffer_muxed1 = RESET_OK;
                 tx_buffer_muxed2 = EOR;
+                tx_msg_len_new   = 4'h3;
+                tx_msg_len_we    = 1;
               end
 
             ERROR:
@@ -537,6 +554,8 @@ module coretest(
                 tx_buffer_muxed1 = ERROR;
                 tx_buffer_muxed2 = cmd_reg;
                 tx_buffer_muxed3 = EOR;
+                tx_msg_len_new   = 4'h4;
+                tx_msg_len_we    = 1;
               end
 
             default:
@@ -545,6 +564,8 @@ module coretest(
                 tx_buffer_muxed1 = UNKNOWN;
                 tx_buffer_muxed2 = cmd_reg;
                 tx_buffer_muxed3 = EOR;
+                tx_msg_len_new   = 4'h4;
+                tx_msg_len_we    = 1;
               end
           endcase // case (response_type)
         end
@@ -759,7 +780,7 @@ module coretest(
         
         TX_NEXT:
           begin
-            if (tx_buffer[tx_buffer_ptr_reg] == EOR) 
+            if (tx_buffer_ptr_reg == tx_msg_len_reg)
               begin
                 tx_engine_new = TX_SENT;
                 tx_engine_we  = 1;
