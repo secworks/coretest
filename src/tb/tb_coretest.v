@@ -50,7 +50,8 @@ module tb_coretest();
   parameter DEBUG           = 0;
   parameter VERBOSE         = 0;
   parameter CMD_MONITOR     = 1;
-  
+  parameter REC_MONITOR     = 1;
+
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD      = CLK_HALF_PERIOD * 2;
 
@@ -206,7 +207,7 @@ module tb_coretest();
     begin : receive_logic
       if (tb_tx_syn)
         begin
-          if (VERBOSE)
+          if (REC_MONITOR)
             begin
               $display("Receiving byte 0x%02x from the DUT.", tb_tx_data);
             end
