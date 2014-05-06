@@ -205,7 +205,7 @@ module coretest(
   reg          tx_buffer_ptr_inc;
   reg          tx_buffer_ptr_rst;
 
-  reg [7 : 0]  tx_buffer [0 : 15];
+  reg [7 : 0]  tx_buffer [0 : 8];
   reg          tx_buffer_we;
 
   reg [3 : 0]  tx_msg_len_reg;
@@ -296,13 +296,6 @@ module coretest(
           tx_buffer[6]           <= 8'h00;
           tx_buffer[7]           <= 8'h00;
           tx_buffer[8]           <= 8'h00;
-          tx_buffer[9]           <= 8'h00;
-          tx_buffer[10]          <= 8'h00;
-          tx_buffer[11]          <= 8'h00;
-          tx_buffer[12]          <= 8'h00;
-          tx_buffer[13]          <= 8'h00;
-          tx_buffer[14]          <= 8'h00;
-          tx_buffer[15]          <= 8'h00;
 
           rx_syn_reg             <= 0;
           rx_ack_reg             <= 0;
