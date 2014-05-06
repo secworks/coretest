@@ -50,7 +50,7 @@ module tb_coretest();
   parameter DEBUG           = 0;
   parameter VERBOSE         = 0;
   parameter CMD_MONITOR     = 1;
-  parameter REC_MONITOR     = 1;
+  parameter REC_MONITOR     = 0;
 
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD      = CLK_HALF_PERIOD * 2;
@@ -343,10 +343,10 @@ module tb_coretest();
   task send_byte(input [7 : 0] data);
     integer i;
     begin
-      $display("*** Sending byte 0x%02x to the dut.", data);
 
       if (VERBOSE)
         begin
+          $display("*** Sending byte 0x%02x to the dut.", data);
           $display("*** Setting RX data and RX SYN.");
         end
       tb_rx_data = data;
@@ -466,9 +466,12 @@ module tb_coretest();
 //      dump_dut_state();
 
       send_read_command(16'h0123);
+      send_read_command(16'haa55);
 //      dump_dut_state();
 
       send_write_command(16'h4224, 32'h1337beef);
+      send_write_command(16'h455aa, 32'h55aa55aa);
+
 //      dump_dut_state();
 
       #(200 * CLK_PERIOD);
