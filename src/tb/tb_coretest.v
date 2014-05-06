@@ -463,16 +463,12 @@ module tb_coretest();
       #(64 * CLK_PERIOD);
 
       send_reset_command();
-//      dump_dut_state();
 
       send_read_command(16'h0123);
       send_read_command(16'haa55);
-//      dump_dut_state();
 
       send_write_command(16'h4224, 32'h1337beef);
       send_write_command(16'h455aa, 32'h55aa55aa);
-
-//      dump_dut_state();
 
       #(200 * CLK_PERIOD);
 
