@@ -223,15 +223,15 @@ module coretest(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  reg [7 : 0] tx_buffert_muxed0;
-  reg [7 : 0] tx_buffert_muxed1;
-  reg [7 : 0] tx_buffert_muxed2;
-  reg [7 : 0] tx_buffert_muxed3;
-  reg [7 : 0] tx_buffert_muxed4;
-  reg [7 : 0] tx_buffert_muxed5;
-  reg [7 : 0] tx_buffert_muxed6;
-  reg [7 : 0] tx_buffert_muxed7;
-  reg [7 : 0] tx_buffert_muxed8;
+  reg [7 : 0] tx_buffer_muxed0;
+  reg [7 : 0] tx_buffer_muxed1;
+  reg [7 : 0] tx_buffer_muxed2;
+  reg [7 : 0] tx_buffer_muxed3;
+  reg [7 : 0] tx_buffer_muxed4;
+  reg [7 : 0] tx_buffer_muxed5;
+  reg [7 : 0] tx_buffer_muxed6;
+  reg [7 : 0] tx_buffer_muxed7;
+  reg [7 : 0] tx_buffer_muxed8;
 
   reg         update_tx_buffer;
   reg [7 : 0] response_type;
@@ -355,15 +355,15 @@ module coretest(
           
           if (tx_buffer_we)
             begin
-              tx_buffer[0] <= tx_buffert_muxed0;
-              tx_buffer[1] <= tx_buffert_muxed1;
-              tx_buffer[2] <= tx_buffert_muxed2;
-              tx_buffer[3] <= tx_buffert_muxed3;
-              tx_buffer[4] <= tx_buffert_muxed4;
-              tx_buffer[5] <= tx_buffert_muxed5;
-              tx_buffer[6] <= tx_buffert_muxed6;
-              tx_buffer[7] <= tx_buffert_muxed7;
-              tx_buffer[8] <= tx_buffert_muxed8;
+              tx_buffer[0] <= tx_buffer_muxed0;
+              tx_buffer[1] <= tx_buffer_muxed1;
+              tx_buffer[2] <= tx_buffer_muxed2;
+              tx_buffer[3] <= tx_buffer_muxed3;
+              tx_buffer[4] <= tx_buffer_muxed4;
+              tx_buffer[5] <= tx_buffer_muxed5;
+              tx_buffer[6] <= tx_buffer_muxed6;
+              tx_buffer[7] <= tx_buffer_muxed7;
+              tx_buffer[8] <= tx_buffer_muxed8;
             end 
 
           if (cmd_we)
@@ -490,63 +490,63 @@ module coretest(
   always @*
     begin: tx_buffer_logic
       // Defafult assignments
-      tx_buffert_muxed0 = 8'h00;
-      tx_buffert_muxed1 = 8'h00;
-      tx_buffert_muxed2 = 8'h00;
-      tx_buffert_muxed3 = 8'h00;
-      tx_buffert_muxed4 = 8'h00;
-      tx_buffert_muxed5 = 8'h00;
-      tx_buffert_muxed6 = 8'h00;
-      tx_buffert_muxed7 = 8'h00;
-      tx_buffert_muxed8 = 8'h00;
+      tx_buffer_muxed0 = 8'h00;
+      tx_buffer_muxed1 = 8'h00;
+      tx_buffer_muxed2 = 8'h00;
+      tx_buffer_muxed3 = 8'h00;
+      tx_buffer_muxed4 = 8'h00;
+      tx_buffer_muxed5 = 8'h00;
+      tx_buffer_muxed6 = 8'h00;
+      tx_buffer_muxed7 = 8'h00;
+      tx_buffer_muxed8 = 8'h00;
 
       tx_buffer_we      = 0;
 
       if (update_tx_buffer)
         begin
           tx_buffer_we = 1;
-          tx_buffert_muxed0 = SOR;
+          tx_buffer_muxed0 = SOR;
 
           case (response_type)
             READ_OK:
               begin
-                tx_buffert_muxed1 = READ_OK;
-                tx_buffert_muxed2 = core_addr_byte0_reg;
-                tx_buffert_muxed3 = core_addr_byte1_reg;
-                tx_buffert_muxed4 = core_read_data_reg[31 : 24];
-                tx_buffert_muxed5 = core_read_data_reg[23 : 16];
-                tx_buffert_muxed6 = core_read_data_reg[15 :  8];
-                tx_buffert_muxed7 = core_read_data_reg[7  :  0];
-                tx_buffert_muxed8 = EOR;
+                tx_buffer_muxed1 = READ_OK;
+                tx_buffer_muxed2 = core_addr_byte0_reg;
+                tx_buffer_muxed3 = core_addr_byte1_reg;
+                tx_buffer_muxed4 = core_read_data_reg[31 : 24];
+                tx_buffer_muxed5 = core_read_data_reg[23 : 16];
+                tx_buffer_muxed6 = core_read_data_reg[15 :  8];
+                tx_buffer_muxed7 = core_read_data_reg[7  :  0];
+                tx_buffer_muxed8 = EOR;
               end
 
             WRITE_OK:
               begin
-                tx_buffert_muxed1 = WRITE_OK;
-                tx_buffert_muxed2 = core_addr_byte0_reg;
-                tx_buffert_muxed3 = core_addr_byte1_reg;
-                tx_buffert_muxed4 = EOR;
+                tx_buffer_muxed1 = WRITE_OK;
+                tx_buffer_muxed2 = core_addr_byte0_reg;
+                tx_buffer_muxed3 = core_addr_byte1_reg;
+                tx_buffer_muxed4 = EOR;
               end
 
             RESET_OK:
               begin
-                tx_buffert_muxed1 = RESET_OK;
-                tx_buffert_muxed2 = EOR;
+                tx_buffer_muxed1 = RESET_OK;
+                tx_buffer_muxed2 = EOR;
               end
 
             ERROR:
               begin
-                tx_buffert_muxed1 = ERROR;
-                tx_buffert_muxed2 = cmd_reg;
-                tx_buffert_muxed3 = EOR;
+                tx_buffer_muxed1 = ERROR;
+                tx_buffer_muxed2 = cmd_reg;
+                tx_buffer_muxed3 = EOR;
               end
 
             default:
               begin
                 // Any response type not explicitly defined is treated as UNKNOWN.
-                tx_buffert_muxed1 = UNKNOWN;
-                tx_buffert_muxed2 = cmd_reg;
-                tx_buffert_muxed3 = EOR;
+                tx_buffer_muxed1 = UNKNOWN;
+                tx_buffer_muxed2 = cmd_reg;
+                tx_buffer_muxed3 = EOR;
               end
           endcase // case (response_type)
         end
