@@ -471,7 +471,7 @@ module tb_coretest();
       send_write_command(16'h4224, 32'h1337beef);
 //      dump_dut_state();
 
-      #(64 * CLK_PERIOD);
+      #(200 * CLK_PERIOD);
 
       display_test_result();
       $display("*** Simulation done.");
