@@ -941,6 +941,12 @@ module coretest(
                       test_engine_new = TEST_GET_DATA0;
                       test_engine_we  = 1;
                     end
+
+                  default:
+                    begin
+                      test_engine_new = TEST_CMD_UNKNOWN;
+                      test_engine_we  = 1;
+                    end
                 endcase // case (cmd_reg)
               end
           end
@@ -1017,6 +1023,12 @@ module coretest(
                       WRITE_CMD:
                         begin
                           test_engine_new = TEST_WR_START;
+                          test_engine_we  = 1;
+                        end
+
+                      default:
+                        begin
+                          test_engine_new = TEST_CMD_UNKNOWN;
                           test_engine_we  = 1;
                         end
                     endcase // case (cmd_reg)
