@@ -70,7 +70,7 @@ module tb_coretest();
   parameter WRITE_OK = 8'h7e;
   parameter RESET_OK = 8'h7d;
   
-  parameter MAX_MEM  = 32'h0000000f;
+  parameter MAX_MEM  = 16'h00ff;
 
   
   //----------------------------------------------------------------
@@ -464,11 +464,13 @@ module tb_coretest();
 
       send_reset_command();
 
-      send_read_command(16'h0123);
-      send_read_command(16'haa55);
+      send_read_command(16'h0023);
+      send_read_command(16'h0055);
 
-      send_write_command(16'h4224, 32'h1337beef);
-      send_write_command(16'h455a, 32'h55aa55aa);
+      send_write_command(16'h00aa, 32'h1337beef);
+      send_read_command(16'h00aa);
+      send_write_command(16'h0010, 32'h55aa55aa);
+      send_read_command(16'h0010);
 
       #(200 * CLK_PERIOD);
 
