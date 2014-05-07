@@ -321,6 +321,8 @@ module tb_coretest();
   // as setting the DUT inputs to defined values.
   //----------------------------------------------------------------
   task init_sim();
+    reg [8 : 0] i;
+    
     begin
       cycle_ctr         = 0;
       error_ctr         = 0;
@@ -331,6 +333,11 @@ module tb_coretest();
       tb_rx_syn         = 0;
       tb_rx_data        = 8'h00;
       tb_tx_ack         = 0;
+
+      for (i = 0 ; i < 256 ; i = i + 1)
+        begin
+          test_mem[i[7 : 0]] = {4{i[7 : 0]}};
+        end
     end
   endtask // init_sim
 
