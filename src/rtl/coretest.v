@@ -10,30 +10,30 @@
 //
 // Author: Joachim Strombergson
 // Copyright (c) 2013  Secworks Sweden AB
-// 
-// Redistribution and use in source and binary forms, with or 
-// without modification, are permitted provided that the following 
-// conditions are met: 
-// 
-// 1. Redistributions of source code must retain the above copyright 
-//    notice, this list of conditions and the following disclaimer. 
-// 
-// 2. Redistributions in binary form must reproduce the above copyright 
-//    notice, this list of conditions and the following disclaimer in 
-//    the documentation and/or other materials provided with the 
-//    distribution. 
-// 
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
-// COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+//
+// Redistribution and use in source and binary forms, with or
+// without modification, are permitted provided that the following
+// conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in
+//    the documentation and/or other materials provided with the
+//    distribution.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+// COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
 // BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
-// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //======================================================================
@@ -41,16 +41,16 @@
 module coretest(
                 input wire           clk,
                 input wire           reset_n,
-                
+
                 // Interface to communication core
                 input wire           rx_syn,
                 input wire [7 : 0]   rx_data,
                 output wire          rx_ack,
-                
+
                 output wire          tx_syn,
                 output wire [7 : 0]  tx_data,
                 input wire           tx_ack,
-                
+
                 // Interface to the core being tested.
                 output wire          core_reset_n,
                 output wire          core_cs,
@@ -61,7 +61,7 @@ module coretest(
                 input wire           core_error
                );
 
-  
+
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
@@ -71,10 +71,10 @@ module coretest(
   // Command constants.
   parameter SOC       = 8'h55;
   parameter EOC       = 8'haa;
-  parameter RESET_CMD = 8'h01; 
-  parameter READ_CMD  = 8'h10; 
-  parameter WRITE_CMD = 8'h11; 
-  
+  parameter RESET_CMD = 8'h01;
+  parameter READ_CMD  = 8'h10;
+  parameter WRITE_CMD = 8'h11;
+
   // Response constants.
   parameter SOR      = 8'haa;
   parameter EOR      = 8'h55;
@@ -96,7 +96,7 @@ module coretest(
   parameter TX_NEXT  = 3'h3;
   parameter TX_SENT  = 3'h4;
   parameter TX_DONE  = 3'h5;
-  
+
   // test_engine states.
   parameter TEST_IDLE          = 8'h00;
   parameter TEST_GET_CMD       = 8'h10;
@@ -120,8 +120,8 @@ module coretest(
   parameter TEST_CMD_UNKNOWN   = 8'h80;
   parameter TEST_CMD_ERROR     = 8'h81;
   parameter TEST_SEND_RESPONSE = 8'hc0;
-  
-  
+
+
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
@@ -130,17 +130,17 @@ module coretest(
   reg          rx_ack_reg;
   reg          rx_ack_new;
   reg          rx_ack_we;
-  
+
   reg          tx_syn_reg;
   reg          tx_syn_new;
   reg          tx_syn_we;
 
   reg          tx_ack_reg;
-  
+
   reg          core_reset_n_reg;
   reg          core_reset_n_new;
   reg          core_reset_n_we;
-  
+
   reg          core_cs_reg;
   reg          core_cs_new;
   reg          core_cs_we;
@@ -156,15 +156,15 @@ module coretest(
   reg          response_sent_reg;
   reg          response_sent_new;
   reg          response_sent_we;
-  
+
   reg [7 : 0]  cmd_reg;
-  reg [7 : 0]  cmd_we;
-  
+  reg          cmd_we;
+
   reg [7 : 0]  core_addr_byte0_reg;
   reg          core_addr_byte0_we;
   reg [7 : 0]  core_addr_byte1_reg;
   reg          core_addr_byte1_we;
-  
+
   reg [7 : 0]  core_wr_data_byte0_reg;
   reg          core_wr_data_byte0_we;
   reg [7 : 0]  core_wr_data_byte1_reg;
@@ -195,10 +195,10 @@ module coretest(
   reg          rx_buffer_ctr_dec;
   reg          rx_buffer_full;
   reg          rx_buffer_empty;
-  
+
   reg [7 : 0]  rx_buffer [0 : 15];
   reg          rx_buffer_we;
-  
+
   reg [3 : 0]  tx_buffer_ptr_reg;
   reg [3 : 0]  tx_buffer_ptr_new;
   reg          tx_buffer_ptr_we;
@@ -211,20 +211,20 @@ module coretest(
   reg [3 : 0]  tx_msg_len_reg;
   reg [3 : 0]  tx_msg_len_new;
   reg          tx_msg_len_we;
-  
+
   reg [2 : 0]  rx_engine_reg;
   reg [2 : 0]  rx_engine_new;
   reg          rx_engine_we;
-  
+
   reg [2 : 0]  tx_engine_reg;
   reg [2 : 0]  tx_engine_new;
   reg          tx_engine_we;
-  
+
   reg [7 : 0]  test_engine_reg;
   reg [7 : 0]  test_engine_new;
   reg          test_engine_we;
 
-  
+
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
@@ -242,8 +242,8 @@ module coretest(
   reg [7 : 0] response_type;
 
   reg [7 : 0] rx_byte;
-  
-  
+
+
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
@@ -256,10 +256,10 @@ module coretest(
   assign core_cs         = core_cs_reg;
   assign core_we         = core_we_reg;
   assign core_address    = {core_addr_byte0_reg, core_addr_byte1_reg};
-  assign core_write_data = {core_wr_data_byte0_reg, core_wr_data_byte1_reg, 
+  assign core_write_data = {core_wr_data_byte0_reg, core_wr_data_byte1_reg,
                             core_wr_data_byte2_reg, core_wr_data_byte3_reg};
-  
-  
+
+
   //----------------------------------------------------------------
   // reg_update
   // Update functionality for all registers in the core.
@@ -286,7 +286,7 @@ module coretest(
           rx_buffer[13]          <= 8'h00;
           rx_buffer[14]          <= 8'h00;
           rx_buffer[15]          <= 8'h00;
-          
+
           tx_buffer[0]           <= 8'h00;
           tx_buffer[1]           <= 8'h00;
           tx_buffer[2]           <= 8'h00;
@@ -301,7 +301,7 @@ module coretest(
           rx_ack_reg             <= 0;
           tx_ack_reg             <= 0;
           tx_syn_reg             <= 0;
-          
+
           rx_buffer_rd_ptr_reg   <= 4'h0;
           rx_buffer_wr_ptr_reg   <= 4'h0;
           rx_buffer_ctr_reg      <= 4'h0;
@@ -311,7 +311,7 @@ module coretest(
 
           send_response_reg      <= 0;
           response_sent_reg      <= 0;
-          
+
           cmd_reg                <= 8'h00;
           core_addr_byte0_reg    <= 8'h00;
           core_addr_byte1_reg    <= 8'h00;
@@ -319,13 +319,13 @@ module coretest(
           core_wr_data_byte1_reg <= 8'h00;
           core_wr_data_byte2_reg <= 8'h00;
           core_wr_data_byte3_reg <= 8'h00;
-          
+
           core_reset_n_reg       <= 1;
           core_cs_reg            <= 0;
           core_we_reg            <= 0;
           core_error_reg         <= 0;
           core_read_data_reg     <= 32'h00000000;
-          
+
           rx_engine_reg          <= RX_IDLE;
           tx_engine_reg          <= TX_IDLE;
           test_engine_reg        <= TEST_IDLE;
@@ -344,12 +344,12 @@ module coretest(
             begin
               tx_syn_reg <= tx_syn_new;
             end
-          
+
           if (rx_buffer_we)
             begin
               rx_buffer[rx_buffer_wr_ptr_reg] <= rx_data;
             end
-          
+
           if (tx_buffer_we)
             begin
               tx_buffer[0] <= tx_buffer_muxed0;
@@ -361,7 +361,7 @@ module coretest(
               tx_buffer[6] <= tx_buffer_muxed6;
               tx_buffer[7] <= tx_buffer_muxed7;
               tx_buffer[8] <= tx_buffer_muxed8;
-            end 
+            end
 
           if (cmd_we)
             begin
@@ -397,22 +397,22 @@ module coretest(
             begin
               core_wr_data_byte3_reg <= rx_byte;
             end
-          
+
           if (rx_buffer_rd_ptr_we)
             begin
               rx_buffer_rd_ptr_reg <= rx_buffer_rd_ptr_new;
             end
-          
+
           if (rx_buffer_wr_ptr_we)
             begin
               rx_buffer_wr_ptr_reg <= rx_buffer_wr_ptr_new;
             end
-          
+
           if (rx_buffer_ctr_we)
             begin
               rx_buffer_ctr_reg <= rx_buffer_ctr_new;
             end
-          
+
           if (tx_buffer_ptr_we)
             begin
               tx_buffer_ptr_reg <= tx_buffer_ptr_new;
@@ -422,7 +422,7 @@ module coretest(
             begin
               tx_msg_len_reg <= tx_msg_len_new;
             end
-          
+
           if (core_reset_n_we)
             begin
               core_reset_n_reg <= core_reset_n_new;
@@ -447,23 +447,23 @@ module coretest(
             begin
               response_sent_reg <= response_sent_new;
             end
-          
+
           if (sample_core_output)
             begin
               core_error_reg     <= core_error;
               core_read_data_reg <= core_read_data;
             end
-          
+
           if (rx_engine_we)
             begin
               rx_engine_reg <= rx_engine_new;
             end
-          
+
           if (tx_engine_we)
             begin
               tx_engine_reg <= tx_engine_new;
             end
-          
+
           if (test_engine_we)
             begin
               test_engine_reg <= test_engine_new;
@@ -480,8 +480,8 @@ module coretest(
     begin : read_rx_buffer
       rx_byte = rx_buffer[rx_buffer_rd_ptr_reg];
     end // read_rx_buffer
-  
-  
+
+
   //---------------------------------------------------------------
   // tx_buffer_logic
   //
@@ -565,7 +565,7 @@ module coretest(
         end
     end // tx_buffer_logic
 
-  
+
   //----------------------------------------------------------------
   // rx_buffer_rd_ptr
   //
@@ -577,7 +577,7 @@ module coretest(
       rx_buffer_rd_ptr_new = 4'h0;
       rx_buffer_rd_ptr_we  = 1'b0;
       rx_buffer_ctr_dec    = 0;
-      
+
       if (rx_buffer_rd_ptr_inc)
         begin
           rx_buffer_ctr_dec    = 1;
@@ -586,7 +586,7 @@ module coretest(
         end
     end // rx_buffer_rd_ptr
 
-  
+
   //----------------------------------------------------------------
   // rx_buffer_wr_ptr
   //
@@ -598,7 +598,7 @@ module coretest(
       rx_buffer_wr_ptr_new = 4'h0;
       rx_buffer_wr_ptr_we  = 1'b0;
       rx_buffer_ctr_inc    = 0;
-      
+
       if (rx_buffer_wr_ptr_inc)
         begin
           rx_buffer_ctr_inc    = 1;
@@ -607,7 +607,7 @@ module coretest(
         end
     end // rx_buffer_wr_ptr
 
-  
+
   //----------------------------------------------------------------
   // rx_buffer_ctr
   //
@@ -620,7 +620,7 @@ module coretest(
       rx_buffer_ctr_we  = 1'b0;
       rx_buffer_empty   = 1'b0;
       rx_buffer_full    = 1'b0;
-      
+
       if (rx_buffer_ctr_inc)
         begin
           rx_buffer_ctr_new = rx_buffer_ctr_reg + 1'b1;
@@ -642,8 +642,8 @@ module coretest(
           rx_buffer_full = 1'b1;
         end
     end // rx_buffer_ctr
-  
-  
+
+
   //----------------------------------------------------------------
   // tx_buffer_ptr
   //
@@ -655,7 +655,7 @@ module coretest(
       // Default assignments
       tx_buffer_ptr_new = 4'h0;
       tx_buffer_ptr_we  = 1'b0;
-      
+
       if (tx_buffer_ptr_inc)
         begin
           tx_buffer_ptr_new = tx_buffer_ptr_reg + 1'b1;
@@ -668,7 +668,7 @@ module coretest(
           tx_buffer_ptr_we  = 1'b1;
         end
     end // tx_buffer_ptr
-  
+
 
   //----------------------------------------------------------------
   // rx_engine
@@ -685,7 +685,7 @@ module coretest(
       rx_buffer_wr_ptr_inc = 1'b0;
       rx_engine_new        = RX_IDLE;
       rx_engine_we         = 1'b0;
-      
+
       case (rx_engine_reg)
         RX_IDLE:
           begin
@@ -699,7 +699,7 @@ module coretest(
                   end
               end
           end
-        
+
         RX_ACK:
           begin
             rx_ack_new           = 1'b1;
@@ -743,7 +743,7 @@ module coretest(
       response_sent_we  = 0;
       tx_syn_new        = 0;
       tx_syn_we         = 0;
-      
+
       tx_engine_new     = TX_IDLE;
       tx_engine_we      = 0;
 
@@ -767,7 +767,7 @@ module coretest(
                 tx_syn_we     = 1;
                 tx_engine_new = TX_NOACK;
                 tx_engine_we  = 1;
-              end                
+              end
           end
 
         TX_NOACK:
@@ -776,9 +776,9 @@ module coretest(
               begin
                 tx_engine_new = TX_NEXT;
                 tx_engine_we  = 1;
-              end                
+              end
           end
-        
+
         TX_NEXT:
           begin
             if (tx_buffer_ptr_reg == tx_msg_len_reg)
@@ -803,7 +803,7 @@ module coretest(
             tx_engine_new     = TX_DONE;
             tx_engine_we      = 1;
           end
-        
+
         TX_DONE:
           begin
             response_sent_new = 0;
@@ -812,7 +812,7 @@ module coretest(
             tx_engine_new     = TX_IDLE;
             tx_engine_we      = 1;
           end
-        
+
         default:
           begin
             tx_engine_new = TX_IDLE;
@@ -820,8 +820,8 @@ module coretest(
           end
       endcase // case (tx_engine_reg)
     end // tx_engine
-  
-  
+
+
   //----------------------------------------------------------------
   // test_engine
   //
@@ -854,7 +854,7 @@ module coretest(
       test_engine_new       = TEST_IDLE;
       test_engine_we        = 0;
 
-      
+
       case (test_engine_reg)
         TEST_IDLE:
           begin
@@ -868,7 +868,7 @@ module coretest(
                   end
               end
           end
-        
+
         TEST_GET_CMD:
           begin
             if (!rx_buffer_empty)
@@ -1050,7 +1050,7 @@ module coretest(
             test_engine_we   = 1;
           end
 
-  
+
         TEST_RST_WAIT:
           begin
             test_engine_new = TEST_RST_END;
@@ -1102,7 +1102,7 @@ module coretest(
                 update_tx_buffer = 1;
                 response_type    = READ_OK;
               end
-            
+
             test_engine_new = TEST_SEND_RESPONSE;
             test_engine_we  = 1;
           end
@@ -1114,7 +1114,7 @@ module coretest(
             core_cs_we  = 1;
             core_we_new = 1;
             core_we_we  = 1;
-            
+
             test_engine_new = TEST_WR_WAIT;
             test_engine_we  = 1;
           end
@@ -1128,7 +1128,7 @@ module coretest(
           end
 
 
-        TEST_WR_END: 
+        TEST_WR_END:
           begin
             core_cs_new        = 0;
             core_cs_we         = 1;
@@ -1146,7 +1146,7 @@ module coretest(
                 update_tx_buffer = 1;
                 response_type    = WRITE_OK;
               end
-            
+
             test_engine_new  = TEST_SEND_RESPONSE;
             test_engine_we   = 1;
           end
@@ -1183,17 +1183,17 @@ module coretest(
               end
           end
 
-        
+
         default:
           begin
-            // If we encounter an unknown state we move 
+            // If we encounter an unknown state we move
             // back to idle.
             test_engine_new = TEST_IDLE;
             test_engine_we  = 1;
           end
       endcase // case (test_engine_reg)
     end // test_engine
-  
+
 endmodule // coretest
 
 //======================================================================
